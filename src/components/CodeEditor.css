@@ -14,3 +14,7 @@
     width: 90vw !important;
   }
 }
+
+.errorLineHighlight {
+  background: rgba(255, 0, 0, 0.15);
+}
