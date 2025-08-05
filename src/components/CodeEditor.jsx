@@ -1,30 +1,37 @@
 import { Editor } from "@monaco-editor/react";
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import "./CodeEditor.css";
+
 function CodeEditor() {
-  monaco.languages.register({
-    id: "marie",
-  });
-  monaco.languages.setMonarchTokensProvider("marie", {
-    tokenizer: {
-      root: [
-        // keywords
-      ],
-    },
-  });
+  // Setup function for Monaco
+  function handleEditorWillMount(monaco) {
+    monaco.languages.register({ id: "marie" });
+    monaco.languages.setMonarchTokensProvider("marie", {
+      tokenizer: {
+        root: [
+          [
+            /\b(?:load|store|add|subt|input|output|halt|skipcond|jump|clear|addi|jumpi|loadi|storei|jns|dec|hex)\b/,
+            "keyword",
+          ],
+        ],
+      },
+    });
+  }
+
   return (
     <div className="code-editor">
       <Editor
         className="editor"
         theme="vs-dark"
-        defaultLanguage="plaintext"
+        defaultLanguage="marie"
         options={{
           fontSize: 16,
           minimap: { enabled: false },
         }}
         defaultValue="// Your code here"
+        beforeMount={handleEditorWillMount}
       />
     </div>
   );
 }
+
 export default CodeEditor;
