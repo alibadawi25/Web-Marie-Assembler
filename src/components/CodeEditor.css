@@ -1,11 +1,35 @@
 .editor {
-  height: 70vh !important;
+  height: 50vh !important;
   width: 60vw !important;
   margin: 0 auto;
 }
 
+.terminal {
+  height: 30vh !important;
+  width: 60vw !important;
+  background-color: #121212;
+  margin: 0 auto;
+}
+
+.output {
+  color: white;
+  font-family: monospace;
+  font-size: 1rem;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+  padding: 10px;
+}
+
 @media (max-width: 1200px) {
   .editor {
+    width: 70vw !important;
+  }
+  .terminal {
     width: 70vw !important;
   }
 }
@@ -13,8 +37,41 @@
   .editor {
     width: 90vw !important;
   }
+  .terminal {
+    width: 90vw !important;
+  }
+  .run-assemble-button {
+    font-size: 0.75rem;
+    padding: 1rem !important;
+    font-weight: 500;
+  }
 }
 
 .errorLineHighlight {
   background: rgba(255, 0, 0, 0.15);
+}
+
+.run-assemble-button {
+  border: none;
+  box-shadow: 0;
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 2px solid white;
+  border-radius: 16px;
+}
+
+.run-assemble-button:focus {
+  outline: none;
+}
+
+.run-assemble-button:disabled {
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.editor-menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }
