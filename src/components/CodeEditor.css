@@ -1,28 +1,47 @@
+.code-editor {
+  padding-top: 1rem;
+}
+
 .editor {
-  height: 50vh !important;
+  height: 45vh !important;
   width: 60vw !important;
   margin: 0 auto;
 }
 
+.step-speed {
+  width: 200px;
+}
+
+.ant-slider .ant-slider-rail {
+  background-color: #00000064;
+}
+
+.ant-slider:hover .ant-slider-rail {
+  background-color: #00000039;
+}
 .terminal {
-  height: 30vh !important;
+  height: 25vh !important;
+  max-height: 30vh !important;
+  overflow-y: auto;
+
   width: 60vw !important;
   background-color: #121212;
   margin: 0 auto;
 }
 
 .output {
+  padding: 1rem;
   color: white;
   font-family: monospace;
   font-size: 1rem;
-  padding: 10px;
   border-radius: 5px;
 }
 
 .error {
+  padding: 1rem;
+
   color: red;
   font-weight: bold;
-  padding: 10px;
 }
 
 @media (max-width: 1200px) {
@@ -73,5 +92,6 @@
 .editor-menu {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 1rem;
 }

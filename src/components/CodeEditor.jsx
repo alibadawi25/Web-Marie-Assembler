@@ -1,6 +1,6 @@
 import { Editor } from "@monaco-editor/react";
 import { useEffect, useRef, useState } from "react";
-import { Button, Menu, Typography } from "antd";
+import { Button, Menu, Slider } from "antd";
 import assembleCode from "../utils/marieAssembler.js";
 import { MarieSimulator } from "../utils/marieSimulator.js";
 import "./CodeEditor.css";
@@ -20,6 +20,9 @@ function CodeEditor() {
   const [output, setOutput] = useState([]);
   const [identifier, setIdentifier] = useState([]);
   const [isCodeAssembled, setIsCodeAssembled] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [stepSpeed, setStepSpeed] = useState(100); // Default step speed in ms
+  const runningRef = useRef(false);
   // MARIE instructions that require arguments
   const instructionsWithArgs = [
     "load",
@@ -271,27 +274,54 @@ function CodeEditor() {
   function run() {
     setErrorMessage(""); // Clear previous error message
     setOutput([]); // Clear previous output
-    try {
-      while (simulator.running) {
-        simulator.step();
+    setIsRunning(true);
+    runningRef.current = true;
+
+    const runWithDelay = async () => {
+      try {
+        while (simulator.running && runningRef.current) {
+          if (!runningRef.current) break; // Check if we should stop
+
+          simulator.step();
+          // Add configurable delay between steps
+          await new Promise((resolve) => setTimeout(resolve, stepSpeed));
+
+          // Check again after delay
+          if (!runningRef.current) break;
+
+          // Update output after each step in case there are OUTPUT instructions
+          const currentOutput = simulator.getOutput();
+          setOutput([...currentOutput]);
+        }
+        // Get final output after execution completes
+        const programOutput = simulator.getOutput();
+        setOutput(programOutput);
+      } catch (error) {
+        if (error.message === "INPUT_REQUIRED") {
+          // Handle input required error
+        } else {
+          setErrorMessage(error.message);
+        }
+        // Still get output even if there's an error
+        const programOutput = simulator.getOutput();
+        setOutput(programOutput);
+      } finally {
+        setIsRunning(false);
+        runningRef.current = false;
       }
-      // Get output after execution completes
-      const programOutput = simulator.getOutput();
-      setOutput(programOutput);
-    } catch (error) {
-      if (error.message === "INPUT_REQUIRED") {
-        setErrorMessage("Program paused - input required");
-      } else {
-        setErrorMessage(error.message);
-      }
-      // Still get output even if there's an error
-      const programOutput = simulator.getOutput();
-      setOutput(programOutput);
-    }
+    };
+
+    runWithDelay();
   }
 
   function handleRunClick() {
-    simulator.getState();
+    // Stop any previous run
+    if (isRunning) {
+      runningRef.current = false; // Signal the async function to stop
+      simulator.stop();
+      setIsRunning(false);
+      return; // Don't start a new run, just stop the current one
+    }
 
     // Extract code values from machine code objects
     const programArray = machineCode.map((instruction) => instruction.code);
@@ -322,6 +352,18 @@ function CodeEditor() {
   return (
     <div className="code-editor">
       <Menu mode="horizontal" className="editor-menu">
+        <label htmlFor="step-speed">Step Speed(ms):</label>
+        <Slider
+          id="step-speed"
+          defaultValue={100}
+          value={stepSpeed}
+          min={0}
+          step={10}
+          max={1000}
+          tooltip={{ open: true }}
+          className="step-speed"
+          onChange={(value) => setStepSpeed(value)}
+        ></Slider>
         <Button onClick={handleAssembleClick} className="run-assemble-button">
           Assemble
         </Button>
@@ -330,7 +372,7 @@ function CodeEditor() {
           disabled={!isCodeAssembled}
           className="run-assemble-button"
         >
-          Run
+          {isRunning ? "Stop" : "Run"}
         </Button>
       </Menu>
       <Editor
@@ -353,12 +395,18 @@ function CodeEditor() {
             <strong>Output:</strong>
             <div className="output-values">
               {output.map((value, index) => (
-                <div key={index}>{value}</div>
+                <p key={index} style={{ margin: "4px 0" }}>
+                  {value}
+                </p>
               ))}
             </div>
           </div>
         )}{" "}
-        {errorMessage && <div className="error">Error: {errorMessage}</div>}
+        {errorMessage && (
+          <p className="error" style={{ margin: "4px 0" }}>
+            Error: {errorMessage}
+          </p>
+        )}
       </div>
     </div>
   );

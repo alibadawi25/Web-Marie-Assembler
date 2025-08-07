@@ -239,4 +239,8 @@ export class MarieSimulator {
       }
     }
   }
+
+  stop() {
+    this.running = false;
+  }
 }
