@@ -1,15 +1,16 @@
 import { Editor } from "@monaco-editor/react";
 import { useEffect, useRef, useState } from "react";
-import { Button, Menu, Slider } from "antd";
+import { Button, Menu, Slider, Modal, Input, Typography, Dropdown } from "antd";
 import assembleCode from "../utils/marieAssembler.js";
 import { MarieSimulator } from "../utils/marieSimulator.js";
 import "./CodeEditor.css";
+const { Title } = Typography;
 
 function CodeEditor() {
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationRef = useRef([]);
-  const simulator = new MarieSimulator();
+  const simulator = MarieSimulator.getInstance(); // Use singleton instance
 
   const [errorLine, setErrorLine] = useState(null);
   const [errorMessageLine, setErrorMessageLine] = useState("");
@@ -22,7 +23,9 @@ function CodeEditor() {
   const [isCodeAssembled, setIsCodeAssembled] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [stepSpeed, setStepSpeed] = useState(100); // Default step speed in ms
-  const runningRef = useRef(false);
+  const [inputModalVisible, setInputModalVisible] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [inputType, setInputType] = useState("dec"); // Add this state
   // MARIE instructions that require arguments
   const instructionsWithArgs = [
     "load",
@@ -271,50 +274,26 @@ function CodeEditor() {
     }
   }
 
-  function run() {
-    setErrorMessage(""); // Clear previous error message
-    setOutput([]); // Clear previous output
-    setIsRunning(true);
-    runningRef.current = true;
-
-    const runWithDelay = async () => {
-      try {
-        while (simulator.running && runningRef.current) {
-          if (!runningRef.current) break; // Check if we should stop
-
-          simulator.step();
-          // Add configurable delay between steps
-          await new Promise((resolve) => setTimeout(resolve, stepSpeed));
-
-          // Check again after delay
-          if (!runningRef.current) break;
-
-          // Update output after each step in case there are OUTPUT instructions
-          const currentOutput = simulator.getOutput();
-          setOutput([...currentOutput]);
-        }
-        // Get final output after execution completes
-        const programOutput = simulator.getOutput();
-        setOutput(programOutput);
-      } catch (error) {
-        if (error.message === "INPUT_REQUIRED") {
-          // Handle input required error
-        } else {
-          setErrorMessage(error.message);
-        }
-        // Still get output even if there's an error
-        const programOutput = simulator.getOutput();
-        setOutput(programOutput);
-      } finally {
-        setIsRunning(false);
-        runningRef.current = false;
-      }
-    };
-
-    runWithDelay();
+  function handleOutput(value) {
+    setOutput((prevOutput) => [...prevOutput, value]);
+    // Scroll to the bottom of the output
+    const terminal = document.querySelector(".terminal");
+    if (terminal) {
+      terminal.scrollTop = terminal.scrollHeight;
+    }
   }
 
+  simulator.outputCallback = handleOutput;
+  simulator.errorCallback = (error) => {
+    setErrorMessage(error.message);
+  };
+  simulator.inputCallback = () => {
+    setInputModalVisible(true);
+  };
+
   function handleRunClick() {
+    errorMessage && setErrorMessage(""); // Clear error message
+    setOutput([]); // Clear previous output
     // Stop any previous run
     if (isRunning) {
       runningRef.current = false; // Signal the async function to stop
@@ -327,8 +306,18 @@ function CodeEditor() {
     const programArray = machineCode.map((instruction) => instruction.code);
 
     simulator.loadProgram(programArray);
-    run();
+    simulator.run();
+    setIsRunning(true);
     console.log("Run button clicked");
+  }
+
+  function handleStopClick() {
+    simulator.stop();
+
+    console.log(simulator.running);
+    console.log(simulator.getState());
+    setIsRunning(false);
+    console.log("Stop button clicked");
   }
 
   function handleAssembleClick() {
@@ -368,7 +357,7 @@ function CodeEditor() {
           Assemble
         </Button>
         <Button
-          onClick={handleRunClick}
+          onClick={isRunning ? handleStopClick : handleRunClick}
           disabled={!isCodeAssembled}
           className="run-assemble-button"
         >
@@ -408,6 +397,71 @@ function CodeEditor() {
           </p>
         )}
       </div>
+      <Modal
+        open={inputModalVisible}
+        closable={false}
+        footer={
+          <Button
+            className="run-assemble-button"
+            onClick={() => {
+              let value = inputValue;
+              if (inputType === "hex") value = parseInt(inputValue, 16);
+              else if (inputType === "bin") value = parseInt(inputValue, 2);
+              else if (inputType === "unicode")
+                value = inputValue.charCodeAt(0);
+              else value = parseInt(inputValue, 10);
+              console.log(value);
+              simulator.setInput([value]);
+              console.log(simulator.getState());
+              simulator.resume(); // Resume execution after input
+              setInputModalVisible(false);
+              setInputValue(""); // Reset input
+              setInputType("dec"); // Reset type
+            }}
+            disabled={
+              inputType === "unicode"
+                ? inputValue.length !== 1
+                : inputValue.trim() === "" ||
+                  isNaN(
+                    inputType === "hex"
+                      ? parseInt(inputValue, 16)
+                      : inputType === "bin"
+                      ? parseInt(inputValue, 2)
+                      : parseInt(inputValue, 10)
+                  )
+            }
+          >
+            OK
+          </Button>
+        }
+      >
+        <Title level={4}>MARIE Input</Title>
+        <Dropdown
+          menu={{
+            items: [
+              { key: "dec", label: "Dec" },
+              { key: "hex", label: "Hex" },
+              { key: "bin", label: "Bin" },
+              { key: "unicode", label: "Unicode" },
+            ],
+            onClick: ({ key }) => setInputType(key),
+          }}
+        >
+          <Button>{inputType.toUpperCase()}</Button>
+        </Dropdown>
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder={
+            inputType === "unicode"
+              ? "Enter a single character"
+              : `Enter a ${inputType} number`
+          }
+          type={inputType === "unicode" ? "text" : "text"}
+          maxLength={inputType === "unicode" ? 1 : undefined}
+          className="input-field"
+        />
+      </Modal>
     </div>
   );
 }

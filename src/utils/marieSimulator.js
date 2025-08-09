@@ -1,5 +1,10 @@
 export class MarieSimulator {
   constructor() {
+    // Singleton pattern - prevent multiple instances
+    if (MarieSimulator.instance) {
+      return MarieSimulator.instance;
+    }
+
     this.memory = new Array(4096).fill(0); // Store numbers, not strings
     this._AC = 0; // MARIE accumulator
     this._IR = 0; // MARIE instruction register
@@ -9,6 +14,37 @@ export class MarieSimulator {
     this.running = false; // Simulation state
     this.inputBuffer = []; // For handling input operations
     this.outputBuffer = []; // For storing output
+    this.outputCallback = null; // Add this line
+    this.errorCallback = null; // Add callback for error handling
+    this.inputCallback = null; // Add callback for input operations
+    this.onProgramEnd = null; // Add callback for when program ends
+
+    // Store the instance
+    MarieSimulator.instance = this;
+  }
+
+  // Static method to get the singleton instance
+  static getInstance() {
+    if (!MarieSimulator.instance) {
+      MarieSimulator.instance = new MarieSimulator();
+    }
+    return MarieSimulator.instance;
+  }
+
+  // Method to reset the simulator state without creating a new instance
+  reset() {
+    this.memory = new Array(4096).fill(0);
+    this._AC = 0;
+    this._IR = 0;
+    this._MAR = 0;
+    this._MBR = 0;
+    this._PC = 0;
+    this.running = false;
+    this.inputBuffer = [];
+    this.outputBuffer = [];
+    this.outputCallback = null;
+    this.inputCallback = null;
+    this.onProgramEnd = null;
   }
 
   // Helper method to validate 16-bit values
@@ -140,16 +176,25 @@ export class MarieSimulator {
           this.AC = this.validateRegisterValue(inputValue, "INPUT");
         } else {
           // Need input - pause execution
-          this.PC--; // Go back to retry this instruction
-          throw new Error("INPUT_REQUIRED");
+          this.PC--; // Decrement PC to retry this instruction when resumed
+          this.pause();
+          console.log("Program paused - input required");
+          if (this.inputCallback) {
+            this.inputCallback(); // Call input callback to prompt for input
+          }
         }
         break;
       case 6: // OUTPUT
+        if (this.outputCallback) {
+          this.outputCallback(this.AC);
+        }
         this.outputBuffer.push(this.AC);
-        console.log("Output:", this.AC);
         break;
       case 7: // HALT
         this.running = false;
+        if (this.onProgramEnd) {
+          this.onProgramEnd();
+        }
         break;
       case 8: // SKIPCOND
         const condition = (address >> 10) & 0x3; // Extract condition bits
@@ -202,11 +247,19 @@ export class MarieSimulator {
 
   // Helper methods
   setInput(inputValues) {
-    // Validate all input values before setting
-    const validatedInputs = inputValues.map((value, index) =>
-      this.validateRegisterValue(value, `INPUT[${index}]`)
-    );
-    this.inputBuffer = [...validatedInputs];
+    try {
+      // Validate all input values before setting
+      const validatedInputs = inputValues.map((value, index) =>
+        this.validateRegisterValue(value, `INPUT[${index}]`)
+      );
+      this.inputBuffer = [...validatedInputs];
+      return { success: true };
+    } catch (error) {
+      console.log("Input validation error:", error.message);
+      if (this.errorCallback) {
+        this.errorCallback(error);
+      }
+    }
   }
 
   getOutput() {
@@ -227,20 +280,47 @@ export class MarieSimulator {
   }
 
   run() {
-    try {
-      while (this.running) {
+    const stepLoop = () => {
+      if (!this.running) return;
+      try {
         this.step();
+        console.log(this.running); // Log the state after each step
+        if (this.running) {
+          // Continue stepping if still running
+          setTimeout(stepLoop, 100);
+        }
+      } catch (error) {
+        if (error.message === "INPUT_REQUIRED") {
+          console.log("Program paused - input required");
+        } else {
+          if (this.errorCallback) {
+            this.errorCallback(error);
+          }
+        }
       }
-    } catch (error) {
-      if (error.message === "INPUT_REQUIRED") {
-        console.log("Program paused - input required");
-      } else {
-        throw error;
-      }
+    };
+    stepLoop();
+  }
+
+  pause() {
+    this.running = false;
+    console.log("Simulation paused");
+  }
+
+  resume() {
+    if (this.running) {
+      console.log("Simulation is already running");
+      return;
     }
+    this.running = true;
+    console.log("Simulation resumed");
+    this.run();
   }
 
   stop() {
     this.running = false;
+    if (this.onProgramEnd) {
+      this.onProgramEnd();
+    }
   }
 }

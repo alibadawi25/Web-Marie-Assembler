@@ -2,7 +2,8 @@ import { MarieSimulator } from "./marieSimulator.js";
 
 const test_code = [4099, 24576, 28672, 12];
 
-const simulator = new MarieSimulator();
+const simulator = MarieSimulator.getInstance(); // Use singleton instance
+simulator.reset(); // Reset the simulator state before loading the program
 simulator.loadProgram(test_code);
 
 // console.log("Initial state:");

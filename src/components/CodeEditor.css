@@ -19,6 +19,30 @@
 .ant-slider:hover .ant-slider-rail {
   background-color: #00000039;
 }
+
+.input-field {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.input-field::placeholder {
+  color: #888888; /* Change this to your desired color */
+  opacity: 1; /* Ensures consistent opacity across browsers */
+}
+
+.input-field::-webkit-input-placeholder {
+  color: #888888; /* For older WebKit browsers */
+}
+
+.input-field::-moz-placeholder {
+  color: #888888; /* For Firefox */
+  opacity: 1;
+}
+
+.input-field:-ms-input-placeholder {
+  color: #888888; /* For Internet Explorer */
+}
+
 .terminal {
   height: 25vh !important;
   max-height: 30vh !important;
