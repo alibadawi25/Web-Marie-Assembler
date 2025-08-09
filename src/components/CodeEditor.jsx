@@ -4,6 +4,7 @@ import { Button, Menu, Slider, Modal, Input, Typography, Dropdown } from "antd";
 import assembleCode from "../utils/marieAssembler.js";
 import { MarieSimulator } from "../utils/marieSimulator.js";
 import "./CodeEditor.css";
+import { width } from "@mui/system";
 const { Title } = Typography;
 
 function CodeEditor() {
@@ -26,6 +27,7 @@ function CodeEditor() {
   const [inputModalVisible, setInputModalVisible] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [inputType, setInputType] = useState("dec"); // Add this state
+  const [outputMode, setOutputMode] = useState("dec"); // Add this state
   // MARIE instructions that require arguments
   const instructionsWithArgs = [
     "load",
@@ -251,6 +253,24 @@ function CodeEditor() {
         }
       }
 
+      // check for lines with labels followed by instructions that use undefined identifiers
+      // Example: "start, load x" where x is not defined
+      if (
+        /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,\s*(load|store|add|subt|jump|skipcond|addi|jumpi|loadi|storei|jns)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$/.test(
+          line
+        )
+      ) {
+        const match = line.match(
+          /^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,\s*(load|store|add|subt|jump|skipcond|addi|jumpi|loadi|storei|jns)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*$/
+        );
+        const usedIdentifier = match[2];
+        if (!identifiers.includes(usedIdentifier)) {
+          foundErrorLine = i + 1;
+          errorMessage = `Syntax error: identifier '${usedIdentifier}' is not defined`;
+          break;
+        }
+      }
+
       // Check for syntax error: label must be at start of line and cannot be a number or have spaces
       if (/,/.test(line) && !/^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,/.test(line)) {
         foundErrorLine = i + 1;
@@ -273,9 +293,18 @@ function CodeEditor() {
       highlightErrorLine(null);
     }
   }
-
   function handleOutput(value) {
-    setOutput((prevOutput) => [...prevOutput, value]);
+    let formattedValue = value;
+    if (outputMode === "hex") {
+      formattedValue = "0x" + Number(value).toString(16).toUpperCase();
+      console.log("Hex output:", formattedValue);
+    } else if (outputMode === "bin") {
+      formattedValue = "0b" + Number(value).toString(2);
+    } else if (outputMode === "unicode") {
+      formattedValue =
+        typeof value === "number" ? String.fromCharCode(value) : value;
+    }
+    setOutput((prevOutput) => [...prevOutput, formattedValue]);
     // Scroll to the bottom of the output
     const terminal = document.querySelector(".terminal");
     if (terminal) {
@@ -345,14 +374,32 @@ function CodeEditor() {
         <Slider
           id="step-speed"
           defaultValue={100}
-          value={stepSpeed}
           min={0}
           step={10}
           max={1000}
           tooltip={{ open: true }}
           className="step-speed"
-          onChange={(value) => setStepSpeed(value)}
+          onChange={(value) => simulator.setDelay(value)}
         ></Slider>
+        <label htmlFor="output-mode">Output Mode:</label>
+        <Dropdown
+          id="output-mode"
+          className="output-mode-dropdown"
+          defaultValue="dec"
+          value={outputMode}
+          trigger={["click"]}
+          menu={{
+            items: [
+              { key: "dec", label: "Dec" },
+              { key: "hex", label: "Hex" },
+              { key: "bin", label: "Bin" },
+              { key: "unicode", label: "Unicode" },
+            ],
+            onClick: ({ key }) => setOutputMode(key),
+          }}
+        >
+          <Button style={{ width: "100px" }}>{outputMode.toUpperCase()}</Button>
+        </Dropdown>
         <Button onClick={handleAssembleClick} className="run-assemble-button">
           Assemble
         </Button>
@@ -368,7 +415,7 @@ function CodeEditor() {
         className="editor"
         theme="marieDark"
         defaultLanguage="marie"
-        value={code}
+        value={code.toLowerCase()}
         options={{
           fontSize: 16,
           minimap: { enabled: false },

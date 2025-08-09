@@ -18,7 +18,7 @@ export class MarieSimulator {
     this.errorCallback = null; // Add callback for error handling
     this.inputCallback = null; // Add callback for input operations
     this.onProgramEnd = null; // Add callback for when program ends
-
+    this.stepDelay = 100; // Delay in milliseconds for each step
     // Store the instance
     MarieSimulator.instance = this;
   }
@@ -262,6 +262,13 @@ export class MarieSimulator {
     }
   }
 
+  setDelay(delay) {
+    if (typeof delay !== "number" || delay < 0) {
+      throw new Error("Delay must be a non-negative number");
+    }
+    this.stepDelay = delay;
+  }
+
   getOutput() {
     return [...this.outputBuffer];
   }
@@ -287,7 +294,7 @@ export class MarieSimulator {
         console.log(this.running); // Log the state after each step
         if (this.running) {
           // Continue stepping if still running
-          setTimeout(stepLoop, 100);
+          setTimeout(stepLoop, this.stepDelay);
         }
       } catch (error) {
         if (error.message === "INPUT_REQUIRED") {

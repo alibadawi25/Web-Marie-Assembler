@@ -54,6 +54,12 @@ export function assembleCode(sourceCode) {
 
       // split either by space or comma
       const tokens = element.split(/[\s,]+/).filter(Boolean);
+      for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].startsWith("//")) {
+          tokens.splice(i); // Remove everything after the comment
+          break;
+        }
+      }
       if (tokens.length === 0) {
         return; // Skip empty lines
       } else if (
@@ -76,7 +82,11 @@ export function assembleCode(sourceCode) {
         tokens.length > 2 &&
         instructionsWithArgs.includes(tokens[1])
       ) {
-        if (symbolTable[tokens[0]] && symbolTable[tokens[2]]) {
+        console.log("Processing tokens:", tokens);
+        console.log("Symbol Table:", symbolTable);
+        console.log("Symbol Table:", symbolTable[tokens[0]]);
+
+        if (tokens[0] in symbolTable && tokens[2] in symbolTable) {
           opcode = getOpcode(tokens[1]);
           args = symbolTable[tokens[2]];
         } else if (tokens[1] == "dec") {
@@ -91,23 +101,23 @@ export function assembleCode(sourceCode) {
         } else {
           throw new Error(
             `Undefined symbol: '${
-              symbolTable[tokens[0]] ? tokens[2] : tokens[0]
+              tokens[0] in symbolTable ? tokens[2] : tokens[0]
             }'`
           );
         }
       } else if (tokens.length === 2) {
         if (
-          symbolTable[tokens[0]] &&
+          tokens[0] in symbolTable &&
           instructionsWithArgs.includes(tokens[1])
         ) {
           throw new Error(
             `Syntax error: instruction '${tokens[0]}' requires an argument`
           );
-        } else if (symbolTable[tokens[0]]) {
+        } else if (tokens[0] in symbolTable) {
           opcode = getOpcode(tokens[1]);
           args = 0;
         } else if (
-          symbolTable[tokens[1]] &&
+          tokens[1] in symbolTable &&
           instructionsWithArgs.includes(tokens[0])
         ) {
           opcode = getOpcode(tokens[0]);
