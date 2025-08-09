@@ -4,7 +4,6 @@ import { Button, Menu, Slider, Modal, Input, Typography, Dropdown } from "antd";
 import assembleCode from "../utils/marieAssembler.js";
 import { MarieSimulator } from "../utils/marieSimulator.js";
 import "./CodeEditor.css";
-import { width } from "@mui/system";
 const { Title } = Typography;
 
 function CodeEditor() {
