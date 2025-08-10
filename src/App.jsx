@@ -3,6 +3,8 @@ import CodeEditor from "./components/CodeEditor";
 import "./App.css"; // Ensure this file is imported for styles
 const { Title } = Typography;
 
+import { Link } from "react-router-dom";
+
 function App() {
   return (
     <ConfigProvider
@@ -18,6 +20,16 @@ function App() {
     >
       <div className="App">
         <Title level={1}>MARIE Assembler</Title>
+        <Link
+          to="/tutorial"
+          style={{
+            color: "#1890ff",
+            marginBottom: 16,
+            display: "inline-block",
+          }}
+        >
+          Tutorial
+        </Link>
         <CodeEditor />
       </div>
     </ConfigProvider>

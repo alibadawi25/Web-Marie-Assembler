@@ -13,7 +13,8 @@
     "@monaco-editor/react": "^4.7.0",
     "antd": "^5.26.7",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.8.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
