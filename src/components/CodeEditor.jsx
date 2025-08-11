@@ -4,7 +4,7 @@ import { Button, Menu, Slider, Modal, Input, Typography, Dropdown } from "antd";
 import assembleCode from "../utils/marieAssembler.js";
 import { MarieSimulator } from "../utils/marieSimulator.js";
 import "./CodeEditor.css";
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 function CodeEditor() {
   const editorRef = useRef(null);
@@ -24,6 +24,18 @@ function CodeEditor() {
   const [isRunning, setIsRunning] = useState(false);
   const [stepSpeed, setStepSpeed] = useState(100); // Default step speed in ms
   const [inputModalVisible, setInputModalVisible] = useState(false);
+  const [generateCodeModalVisible, setGenerateCodeModalVisible] =
+    useState(false);
+  const [generateCodeInsertPosition, setGenerateCodeInsertPosition] =
+    useState(null);
+  const [generatedCode, setGeneratedCode] = useState("if-condition");
+  // if condition part
+  const [ifIdentifier1, setIfIdentifier1] = useState("");
+  const [newIdentifierName, setNewIdentifierName] = useState("");
+  const [newIdentifierValue, setNewIdentifierValue] = useState("0");
+  const [conditionOperator, setConditionOperator] = useState("==");
+  const [ifIdentifier2, setIfIdentifier2] = useState("");
+
   const [inputValue, setInputValue] = useState("");
   const [inputType, setInputType] = useState("dec"); // Add this state
   const [outputMode, setOutputMode] = useState("dec"); // Add this state
@@ -125,6 +137,18 @@ function CodeEditor() {
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     monacoRef.current = monaco;
+
+    // Add custom context menu action
+    editor.addAction({
+      id: "generate",
+      label: "Generate Code",
+      contextMenuGroupId: "navigation",
+      run: function (ed) {
+        // Save the position where right-click was pressed
+        setGenerateCodeInsertPosition(ed.getPosition());
+        setGenerateCodeModalVisible(true);
+      },
+    });
   }
 
   function highlightErrorLine(lineNumber, errorMessage) {
@@ -366,6 +390,15 @@ function CodeEditor() {
       // For example, you can save it to a state or send it to a simulator
     }
   }
+
+  function generateIdentifier() {
+    const newIdentifier = `id${identifier.length + 1}`;
+    setIdentifier((prevIdentifiers) => [...prevIdentifiers, newIdentifier]);
+    setIfIdentifier1(newIdentifier); // Set the new identifier as the selected one
+    setCode((prevCode) => {
+      return `${prevCode}\n${newIdentifier}, dec 0`;
+    });
+  }
   return (
     <div className="code-editor">
       <Menu mode="horizontal" className="editor-menu">
@@ -376,7 +409,7 @@ function CodeEditor() {
           min={0}
           step={10}
           max={1000}
-          tooltip={{ open: true }}
+          tooltip={{ open: !(inputModalVisible || generateCodeModalVisible) }}
           className="step-speed"
           onChange={(value) => simulator.setDelay(value)}
         ></Slider>
@@ -507,6 +540,162 @@ function CodeEditor() {
           maxLength={inputType === "unicode" ? 1 : undefined}
           className="input-field"
         />
+      </Modal>
+      <Modal
+        open={generateCodeModalVisible}
+        closable={false}
+        className="generate-code-modal"
+        footer={
+          <Button
+            className="run-assemble-button"
+            onClick={() => {
+              let conditionCode = "";
+              if (generatedCode === "if-condition") {
+                if (conditionOperator === "==") {
+                  conditionCode =
+                    `load ${ifIdentifier1}\n` +
+                    `subt ${ifIdentifier2}\n` +
+                    "skipcond 400\n" +
+                    "jump else\n" +
+                    "if, // if block starts here\n" +
+                    "else, // else block starts here\n";
+                }
+              }
+              // Insert at the saved right-click position in Monaco Editor
+              if (editorRef.current && generateCodeInsertPosition) {
+                const editor = editorRef.current;
+                const pos = generateCodeInsertPosition;
+                const range = new (
+                  monacoRef.current
+                    ? monacoRef.current.Range
+                    : window.monaco.Range
+                )(pos.lineNumber, pos.column, pos.lineNumber, pos.column);
+                editor.executeEdits("insert-generated-code", [
+                  {
+                    range,
+                    text: conditionCode,
+                    forceMoveMarkers: true,
+                  },
+                ]);
+              }
+              setGenerateCodeInsertPosition(null);
+              setGenerateCodeModalVisible(false);
+            }}
+          >
+            OK
+          </Button>
+        }
+      >
+        <Title level={4}>Generate Code</Title>
+        <Dropdown
+          menu={{
+            items: [
+              { key: "if-condition", label: "If Condition" },
+              { key: "loop", label: "Loop" },
+              { key: "subroutine", label: "Subroutine" },
+            ],
+            onClick: ({ key }) => setGeneratedCode(key),
+          }}
+        >
+          <Button style={{ display: "block", marginBottom: "10px" }}>
+            {generatedCode}
+          </Button>
+        </Dropdown>
+        {generatedCode === "if-condition" &&
+          (identifier.length >= 2 ? (
+            <>
+              <Text style={{ marginRight: "10px" }}>{"if ("}</Text>
+              <Dropdown
+                menu={{
+                  items: identifier.map((id) => ({
+                    key: id,
+                    label: id,
+                  })),
+                  onClick: ({ key }) => setIfIdentifier1(key),
+                }}
+              >
+                <Button>{ifIdentifier1 || "Select Identifier"}</Button>
+              </Dropdown>
+              <Dropdown
+                menu={{
+                  items: [
+                    { key: "==", label: "==" },
+                    { key: "!=", label: "!=" },
+                    { key: "<", label: "<" },
+                    { key: "<=", label: "<=" },
+                    { key: ">", label: ">" },
+                    { key: ">=", label: ">=" },
+                  ],
+                  onClick: ({ key }) => {
+                    setConditionOperator(key);
+                  },
+                }}
+              >
+                <Button style={{ marginInline: "10px" }}>
+                  {conditionOperator}
+                </Button>
+              </Dropdown>
+              <Dropdown
+                menu={{
+                  items: identifier.map((id) => ({
+                    key: id,
+                    label: id,
+                  })),
+                  onClick: ({ key }) => setIfIdentifier2(key),
+                }}
+              >
+                <Button>{ifIdentifier2 || "Select Identifier"}</Button>
+              </Dropdown>
+              <Text style={{ marginLeft: "10px" }}>{" ) {"}</Text>
+            </>
+          ) : (
+            <>
+              <Title level={4}>Generate an identifier</Title>
+              <Input
+                placeholder="Identifier Name"
+                value={newIdentifierName}
+                onChange={(e) => setNewIdentifierName(e.target.value)}
+                className="input-field"
+              />
+              <Input
+                placeholder="Initial Value"
+                value={newIdentifierValue}
+                onChange={(e) => setNewIdentifierValue(e.target.value)}
+                type="number"
+                className="input-field"
+              />
+              <Button
+                onClick={() => {
+                  if (!newIdentifierName) return;
+                  setIdentifier((prev) => [...prev, newIdentifierName]);
+                  setIfIdentifier1(newIdentifierName);
+                  setCode(
+                    (prev) =>
+                      `${prev}\n${newIdentifierName}, dec ${newIdentifierValue}`
+                  );
+                  setNewIdentifierName("");
+                  setNewIdentifierValue("0");
+                }}
+                disabled={!newIdentifierName}
+                className="run-assemble-button"
+                style={{ marginTop: "10px" }}
+              >
+                Add Identifier
+              </Button>
+            </>
+          ))}
+        {generatedCode === "loop" && (
+          <Input
+            placeholder="Enter loop condition (e.g., A < 10)"
+            className="input-field"
+          />
+        )}
+        {generatedCode === "subroutine" && (
+          <Input
+            placeholder="Enter subroutine name (e.g., mySubroutine)"
+            className="input-field"
+          />
+        )}
       </Modal>
     </div>
   );
