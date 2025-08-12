@@ -35,6 +35,7 @@ function CodeEditor() {
   const [newIdentifierValue, setNewIdentifierValue] = useState("0");
   const [conditionOperator, setConditionOperator] = useState("==");
   const [ifIdentifier2, setIfIdentifier2] = useState("");
+  const [ifStatementCount, setIfStatementCount] = useState(0);
 
   const [inputValue, setInputValue] = useState("");
   const [inputType, setInputType] = useState("dec"); // Add this state
@@ -63,10 +64,11 @@ function CodeEditor() {
             /\b(?:load|store|add|subt|input|output|halt|skipcond|jump|clear|addi|jumpi|loadi|storei|jns|dec|hex)\b/,
             "keyword",
           ],
+          [/^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,/, "identifier-declaration"],
+          [/\b[a-zA-Z_][a-zA-Z0-9_]*\b/, "identifier-reference"],
           [/\b\d+[a-fA-F]+\d*\b/, "number"],
           [/\b[a-fA-F]+\d+[a-fA-F]*\b/, "number"],
           [/\b\d+\b/, "number"],
-          [/^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,/, "identifier"],
           [/\/\/.*$/, "comment"],
         ],
       },
@@ -78,7 +80,8 @@ function CodeEditor() {
       inherit: true,
       rules: [
         { token: "keyword", foreground: "569cd6" },
-        { token: "identifier", foreground: "8d6ec2" },
+        { token: "identifier-declaration", foreground: "8d6ec2" }, // Purple for declarations (with comma)
+        { token: "identifier-reference", foreground: "dcdcaa" }, // Yellow for references (without comma)
         { token: "number", foreground: "b5cea8" },
         { token: "comment", foreground: "608b4e" },
       ],
@@ -383,6 +386,8 @@ function CodeEditor() {
     } else {
       setMachineCode(result.machineCode);
       setSymbolTable(result.symbolTable);
+      setOutput([]);
+      setErrorMessage("");
       console.log("Assembly successful:", result.machineCode);
 
       setIsCodeAssembled(true);
@@ -551,15 +556,55 @@ function CodeEditor() {
             onClick={() => {
               let conditionCode = "";
               if (generatedCode === "if-condition") {
-                if (conditionOperator === "==") {
-                  conditionCode =
-                    `load ${ifIdentifier1}\n` +
-                    `subt ${ifIdentifier2}\n` +
-                    "skipcond 400\n" +
-                    "jump else\n" +
-                    "if, // if block starts here\n" +
-                    "else, // else block starts here\n";
+                setIfStatementCount(ifStatementCount + 1);
+                let ifIdentifier = "if" + ifStatementCount;
+                let elseIdentifier = "else" + ifStatementCount;
+                let endifIdentifier = "endIf" + ifStatementCount;
+                let ifBlock =
+                  ifIdentifier +
+                  ", // if block starts here\n" +
+                  "// write code before jump endIf line \n" +
+                  "jump " +
+                  endifIdentifier +
+                  "\n";
+                let elseBlock =
+                  elseIdentifier + ", // else block starts here\n";
+                let jumpLine;
+                if (
+                  conditionOperator === "==" ||
+                  conditionOperator === "<" ||
+                  conditionOperator === ">"
+                ) {
+                  jumpLine = "jump " + elseIdentifier + "\n";
+                } else {
+                  jumpLine = "jump " + ifIdentifier + "\n";
                 }
+                let conditionArg;
+                if (conditionOperator === "==" || conditionOperator === "!=") {
+                  conditionArg = "400"; // Equal condition
+                } else if (
+                  conditionOperator === "<" ||
+                  conditionOperator === ">="
+                ) {
+                  conditionArg = "000"; // Less than condition
+                } else if (
+                  conditionOperator === ">" ||
+                  conditionOperator === "<="
+                ) {
+                  conditionArg = "800"; // Greater than condition
+                }
+
+                conditionCode =
+                  `load ${ifIdentifier1}\n` +
+                  `subt ${ifIdentifier2}\n` +
+                  "skipcond " +
+                  conditionArg +
+                  "\n" +
+                  jumpLine +
+                  ifBlock +
+                  elseBlock +
+                  endifIdentifier +
+                  ", // if-statement block ends here\n";
               }
               // Insert at the saved right-click position in Monaco Editor
               if (editorRef.current && generateCodeInsertPosition) {
