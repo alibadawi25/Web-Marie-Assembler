@@ -2,12 +2,103 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Marie Assembler</title>
+    <meta name="description" content="MARIE Assembly Language Editor and Simulator - A web-based educational tool for learning computer architecture and assembly programming" />
+    <meta name="keywords" content="MARIE, assembly, programming, computer architecture, education, simulator, assembler" />
+    <meta name="author" content="Marie Assembler Team" />
+    <meta name="theme-color" content="#1890ff" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="src/assets/2.png" />
+    <link rel="apple-touch-icon" href="src/assets/2.png" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Open Graph meta tags for social sharing -->
+    <meta property="og:title" content="MARIE Assembler" />
+    <meta property="og:description" content="A web-based educational tool for learning computer architecture and assembly programming" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="src/assets/2.png" />
+    
+    <!-- Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="MARIE Assembler" />
+    <meta name="twitter:description" content="A web-based educational tool for learning computer architecture and assembly programming" />
+    
+    <title>MARIE Assembler</title>
+    
+    <!-- Loading styles to prevent FOUC -->
+    <style>
+      
+      /* Loading spinner */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #242424;
+        z-index: 9999;
+      }
+      
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top: 4px solid #1890ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
+    <!-- Loading indicator -->
+    <div id="loading" class="loading-container">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    
+    <!-- Main application root -->
     <div id="root"></div>
+    
+    <!-- Application script -->
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Remove loading indicator once app loads -->
+    <script>
+      window.addEventListener('load', function() {
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.style.display = 'none';
+          // Restore normal scrolling
+          document.body.style.overflow = 'auto';
+        }
+      });
+    </script>
+    
+    <!-- Error boundary fallback -->
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+        <h2>JavaScript Required</h2>
+        <p>This application requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+      </noscript>
   </body>
 </html>
