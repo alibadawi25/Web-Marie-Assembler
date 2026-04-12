@@ -1,121 +1,268 @@
+/* ─── Editor Shell ───────────────────────────────────────────────────────── */
+
 .code-editor {
-  padding-top: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
 }
 
-.editor {
-  height: 45vh !important;
-  width: 60vw !important;
-  margin: 0 auto;
+/* ─── Toolbar ────────────────────────────────────────────────────────────── */
+
+.editor-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  height: 46px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #2c2c2c;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.toolbar-speed {
+  flex: 0 0 auto;
+  gap: 12px;
+}
+
+.toolbar-speed-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #555;
+  min-width: 42px;
+  white-space: nowrap;
 }
 
 .step-speed {
-  width: 200px;
+  width: 180px;
+  margin: 0 !important;
 }
 
 .ant-slider .ant-slider-rail {
-  background-color: #00000064;
+  background-color: #333;
 }
-
 .ant-slider:hover .ant-slider-rail {
-  background-color: #00000039;
+  background-color: #3a3a3a;
 }
 
-.input-field {
-  width: 100%;
-  margin-top: 10px;
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.input-field::placeholder {
-  color: #888888; /* Change this to your desired color */
-  opacity: 1; /* Ensures consistent opacity across browsers */
+.toolbar-dropdown-btn {
+  height: 30px !important;
+  padding: 0 12px !important;
+  background: #252525 !important;
+  border: 1px solid #383838 !important;
+  color: #bbb !important;
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  min-width: 78px;
+}
+.toolbar-dropdown-btn:hover {
+  border-color: #555 !important;
+  color: #eee !important;
 }
 
-.input-field::-webkit-input-placeholder {
-  color: #888888; /* For older WebKit browsers */
+.toolbar-btn {
+  height: 30px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  border: none !important;
+  cursor: pointer;
+  transition: filter 130ms;
+}
+.toolbar-btn:hover { filter: brightness(1.12); }
+
+.toolbar-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.input-field::-moz-placeholder {
-  color: #888888; /* For Firefox */
-  opacity: 1;
+.toolbar-btn-assemble {
+  background: #1f3a5c !important;
+  color: #7ec8f7 !important;
 }
 
-.input-field:-ms-input-placeholder {
-  color: #888888; /* For Internet Explorer */
+.toolbar-btn-run {
+  background: #1a4a2e !important;
+  color: #6de89a !important;
+}
+
+.toolbar-btn-stop {
+  background: #4a1a1a !important;
+  color: #f87070 !important;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.38 !important;
+  cursor: not-allowed;
+  filter: none !important;
+}
+
+/* ─── Monaco Editor ──────────────────────────────────────────────────────── */
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.editor {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ─── Terminal Panel ─────────────────────────────────────────────────────── */
+
+.terminal-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  background: #111;
+  border-top: 1px solid #2c2c2c;
+}
+
+.terminal-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 30px;
+  background: #161616;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.terminal-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.terminal-running-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6de89a;
+}
+
+.terminal-ready-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7ec8f7;
 }
 
 .terminal {
-  height: 25vh !important;
-  max-height: 30vh !important;
+  flex: 1;
   overflow-y: auto;
-
-  width: 60vw !important;
-  background-color: #121212;
-  margin: 0 auto;
+  padding: 10px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
 }
 
-.output {
-  padding: 1rem;
-  color: white;
-  font-family: monospace;
-  font-size: 1rem;
-  border-radius: 5px;
+.terminal-placeholder {
+  margin: 0;
+  color: #3a3a3a;
+  font-family: "Menlo", "Consolas", "Courier New", monospace;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.output { padding: 0; }
+
+.output-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 2px 0;
+  color: #c8f0d8;
+  font-family: "Menlo", "Consolas", "Courier New", monospace;
+  font-size: 0.88rem;
+}
+
+.output-index {
+  flex-shrink: 0;
+  min-width: 22px;
+  font-size: 0.72rem;
+  color: #444;
+  text-align: right;
+  user-select: none;
 }
 
 .error {
-  padding: 1rem;
-
-  color: red;
-  font-weight: bold;
+  margin: 4px 0;
+  padding: 0;
+  color: #f87070;
+  font-family: "Menlo", "Consolas", "Courier New", monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-@media (max-width: 1200px) {
-  .editor {
-    width: 70vw !important;
-  }
-  .terminal {
-    width: 70vw !important;
-  }
-}
-@media (max-width: 800px) {
-  .editor {
-    width: 90vw !important;
-  }
-  .terminal {
-    width: 90vw !important;
-  }
-  .run-assemble-button {
-    font-size: 0.75rem;
-    padding: 1rem !important;
-    font-weight: 500;
-  }
-}
+/* ─── Error Highlight ────────────────────────────────────────────────────── */
 
 .errorLineHighlight {
   background: rgba(255, 0, 0, 0.15);
 }
 
+/* ─── Input Field (modals) ───────────────────────────────────────────────── */
+
+.input-field {
+  width: 100%;
+  margin-top: 10px;
+}
+.input-field::placeholder               { color: #888; opacity: 1; }
+.input-field::-webkit-input-placeholder { color: #888; }
+.input-field::-moz-placeholder          { color: #888; opacity: 1; }
+.input-field:-ms-input-placeholder      { color: #888; }
+
+/* ─── Legacy run-assemble-button (used in modals) ────────────────────────── */
+
 .run-assemble-button {
-  border: none;
-  box-shadow: 0;
-  padding: 10px 20px;
-  cursor: pointer;
-  border: 2px solid white;
-  border-radius: 16px;
+  padding: 8px 18px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid rgba(255,255,255,0.3) !important;
+  font-weight: 600 !important;
 }
-
-.run-assemble-button:focus {
-  outline: none;
-}
-
+.run-assemble-button:focus  { outline: none; }
 .run-assemble-button:disabled {
-  color: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255,255,255,0.35) !important;
+  border-color: rgba(255,255,255,0.18) !important;
   cursor: not-allowed;
 }
 
-.editor-menu {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1rem;
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .toolbar-speed { display: none; }
+  .editor-toolbar { justify-content: flex-end; }
+  .terminal-panel { height: 160px; }
 }
