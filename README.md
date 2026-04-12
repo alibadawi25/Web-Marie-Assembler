@@ -15,10 +15,13 @@ The Web MARIE Assembler is a modern, browser-based implementation of a MARIE (Ma
 - **Memory Simulation**: Complete 4096-word memory simulation with register validation
 - **Singleton Architecture**: Efficient memory management with single simulator instance
 - **Responsive Design**: Works seamlessly across different screen sizes
+- **Interactive Tutorial**: Built-in learning lab with guided missions, step-by-step traces, instruction reference, SKIPCOND decoder, and quiz
+- **Code Generation**: Auto-generate if-condition templates with proper jump logic
+- **XP System**: Earn experience points by completing tutorial missions
 
 ## Technology Stack
 
-- **Frontend**: React 18 with Hooks
+- **Frontend**: React 19 with Hooks
 - **Code Editor**: Monaco Editor (VS Code editor core)
 - **UI Components**: Ant Design
 - **Styling**: CSS3 with custom themes
@@ -76,9 +79,9 @@ The Web MARIE Assembler is a modern, browser-based implementation of a MARIE (Ma
 
 **SKIPCOND Conditions:**
 
-- `SKIPCOND 000`: Skip if AC > 0
+- `SKIPCOND 000`: Skip if AC < 0
 - `SKIPCOND 400`: Skip if AC = 0
-- `SKIPCOND 800`: Skip if AC < 0
+- `SKIPCOND 800`: Skip if AC > 0
 
 ### Data Declaration
 
@@ -144,10 +147,10 @@ sum, DEC 0            // Storage for sum
 
 ### Control Panel
 
-- **Speed Control**: Adjustable execution speed from 0ms to 1000ms per step
+- **Speed Control**: Adjustable execution speed from 0ms to 1000ms per step with real-time display
 - **Output Format**: Toggle between Decimal, Hexadecimal, Binary, and Unicode output
-- **Assemble Button**: Convert assembly code to machine code
-- **Run/Stop Button**: Start/stop program execution with proper state management
+- **Assemble Button**: Convert assembly code to machine code with error highlighting
+- **Run/Stop Button**: Start/stop program execution with proper state management and visual indicators
 
 ### Input/Output System
 
@@ -181,24 +184,26 @@ sum, DEC 0            // Storage for sum
 
 - **Line Highlighting**: Red highlighting for syntax errors
 - **Error Markers**: Monaco editor error markers with detailed messages
-- **Console Logging**: Detailed error information in browser console
+- **Inline Error Messages**: Detailed error feedback in the terminal panel
 - **User Alerts**: User-friendly alert dialogs for input errors
 
 ## Architecture & Implementation
 
 ### Frontend Structure
 
-```
+```text
 src/
-├── components/
-│   ├── codeEditor.jsx          # Main editor component
-│   └── CodeEditor.css          # Component styling
-├── utils/
-│   ├── marieAssembler.js       # Assembly to machine code conversion
-│   ├── marieSimulator.js       # MARIE machine simulation
-│   └── tester.js              # Testing utilities
-├── App.jsx                     # Main application component
-└── main.jsx                   # Application entry point
+|-- components/
+|   |-- CodeEditor.jsx          # Main editor component
+|   `-- CodeEditor.css          # Component styling
+|-- pages/
+|   `-- TutorialPage.jsx        # In-app tutorial page
+|-- utils/
+|   |-- marieAssembler.js       # Assembly to machine code conversion
+|   |-- marieSimulator.js       # MARIE machine simulation
+|   `-- tester.js               # Local testing utility
+|-- App.jsx                     # Main application component
+`-- main.jsx                    # Application entry point
 ```
 
 ### Key Components
@@ -281,6 +286,14 @@ npm run preview
 
 ## Usage Guide
 
+### Learning MARIE (New Users)
+
+1. **Visit the Tutorial** at `/tutorial` to learn step-by-step
+2. **Complete guided missions** with interactive step-through traces
+3. **Use the SKIPCOND decoder** to understand conditional skips
+4. **Take the quiz** to validate your knowledge
+5. **Copy working examples** directly to the editor
+
 ### Writing Your First Program
 
 1. **Open the application** in your web browser
@@ -290,7 +303,7 @@ npm run preview
 5. **Click "Assemble"** to convert to machine code
 6. **Click "Run"** to execute your program
 7. **Interact with INPUT** instructions via modal dialogs
-8. **View output** in the terminal section
+8. **View output** in the terminal section below the editor
 
 ### Example Session
 

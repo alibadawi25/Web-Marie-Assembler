@@ -1,164 +1,175 @@
+class AssemblerError extends Error {
+  constructor(message, line) {
+    super(message);
+    this.name = "AssemblerError";
+    this.line = line;
+  }
+}
+
+const instructionsWithArgs = new Set([
+  "load",
+  "store",
+  "add",
+  "subt",
+  "skipcond",
+  "jump",
+  "addi",
+  "jumpi",
+  "loadi",
+  "storei",
+  "jns",
+  "dec",
+  "hex",
+]);
+
+function parseLine(rawLine, lineNumber) {
+  const withoutComment = rawLine.split("//")[0].trim();
+  if (!withoutComment) return null;
+
+  let label = null;
+  let remainder = withoutComment;
+
+  const labelMatch = remainder.match(
+    /^(?<label>[a-zA-Z_][a-zA-Z0-9_]*)\s*,\s*(?<rest>.*)$/
+  );
+  if (labelMatch) {
+    label = labelMatch.groups.label;
+    remainder = labelMatch.groups.rest.trim();
+  }
+
+  // Label-only lines are allowed and point to the next instruction address.
+  if (!remainder) {
+    return { lineNumber, label, instruction: null, operand: null };
+  }
+
+  const tokens = remainder.split(/\s+/).filter(Boolean);
+  if (tokens.length > 2) {
+    throw new AssemblerError(
+      `Syntax error: too many tokens on this line`,
+      lineNumber
+    );
+  }
+
+  const instruction = tokens[0].toLowerCase();
+  const operand = tokens[1] ?? null;
+  return { lineNumber, label, instruction, operand };
+}
+
+function parseDecOperand(operand, lineNumber) {
+  if (!/^-?\d+$/.test(operand)) {
+    throw new AssemblerError(`Syntax error: DEC requires a valid number`, lineNumber);
+  }
+
+  const value = Number.parseInt(operand, 10);
+  if (value < 0 || value > 0xffff) {
+    throw new AssemblerError(
+      `Syntax error: DEC value must be between 0 and 65535`,
+      lineNumber
+    );
+  }
+  return value;
+}
+
+function parseHexOperand(operand, lineNumber) {
+  if (!/^[0-9a-fA-F]+$/.test(operand)) {
+    throw new AssemblerError(`Syntax error: HEX requires a valid number`, lineNumber);
+  }
+
+  const value = Number.parseInt(operand, 16);
+  if (value < 0 || value > 0xffff) {
+    throw new AssemblerError(
+      `Syntax error: HEX value must be between 0000 and FFFF`,
+      lineNumber
+    );
+  }
+  return value;
+}
+
 export function assembleCode(sourceCode) {
   try {
-    // MARIE instructions that require arguments
-    const instructionsWithArgs = [
-      "load",
-      "store",
-      "add",
-      "subt",
-      "skipcond",
-      "jump",
-      "addi",
-      "jumpi",
-      "loadi",
-      "storei",
-      "jns",
-      "dec",
-      "hex",
-    ];
-    // Parse the source code
     const lines = sourceCode.split("\n");
+    const parsedLines = [];
     const machineCode = [];
     const symbolTable = {};
 
     let address = 0;
-    lines.forEach((element) => {
-      if (
-        !element ||
-        /^\s*$/.test(element) ||
-        element.trim().startsWith("//")
-      ) {
-        return;
+    lines.forEach((line, index) => {
+      const lineNumber = index + 1;
+      const parsed = parseLine(line, lineNumber);
+      if (!parsed) return;
+
+      if (parsed.label) {
+        const labelKey = parsed.label.toLowerCase();
+        if (labelKey in symbolTable) {
+          throw new AssemblerError(
+            `Duplicate label: '${parsed.label}'`,
+            lineNumber
+          );
+        }
+        symbolTable[labelKey] = address;
       }
-      const labelMatch = element.match(/^(?<label>\w+),/);
-      if (labelMatch) {
-        const label = labelMatch.groups.label;
-        symbolTable[label] = address;
+
+      parsedLines.push(parsed);
+
+      if (parsed.instruction) {
+        address++;
       }
-      address++;
     });
 
-    console.log("Symbol Table:", symbolTable);
-    // Second pass: generate machine code
-    let secondPassAddress = 0;
-    lines.forEach((element, index) => {
+    parsedLines.forEach(({ lineNumber, instruction, operand }) => {
+      // Label-only line; no emitted machine instruction.
+      if (!instruction) return;
+
+      const requiresArg = instructionsWithArgs.has(instruction);
+
+      if (requiresArg && !operand) {
+        throw new AssemblerError(
+          `Syntax error: instruction '${instruction}' requires an argument`,
+          lineNumber
+        );
+      }
+
+      if (!requiresArg && operand) {
+        throw new AssemblerError(
+          `Syntax error: instruction '${instruction}' does not accept an argument`,
+          lineNumber
+        );
+      }
+
       let opcode;
       let args = 0;
-      if (
-        !element ||
-        /^\s*$/.test(element) ||
-        element.trim().startsWith("//")
-      ) {
-        return;
-      }
 
-      // split either by space or comma
-      const tokens = element.split(/[\s,]+/).filter(Boolean);
-      for (let i = 0; i < tokens.length; i++) {
-        if (tokens[i].startsWith("//")) {
-          tokens.splice(i); // Remove everything after the comment
-          break;
-        }
-      }
-      if (tokens.length === 0) {
-        return; // Skip empty lines
-      } else if (
-        tokens.length === 1 &&
-        instructionsWithArgs.includes(tokens[0])
-      ) {
-        // If the instruction requires an argument but no argument is provided
-        throw new Error(
-          `Syntax error: instruction '${tokens[0]}' requires an argument`
-        );
-      } else if (
-        tokens.length > 2 &&
-        !instructionsWithArgs.includes(tokens[1])
-      ) {
-        // If the instruction does not require an argument but one is provided
-        throw new Error(
-          `Syntax error: instruction '${tokens[1]}' does not accept an argument`
-        );
-      } else if (
-        tokens.length > 2 &&
-        instructionsWithArgs.includes(tokens[1])
-      ) {
-        console.log("Processing tokens:", tokens);
-        console.log("Symbol Table:", symbolTable);
-        console.log("Symbol Table:", symbolTable[tokens[0]]);
-
-        if (tokens[0] in symbolTable && tokens[2] in symbolTable) {
-          opcode = getOpcode(tokens[1]);
-          args = symbolTable[tokens[2]];
-        } else if (tokens[1] == "dec") {
-          opcode = 0;
-          args = parseInt(tokens[2], 10);
-        } else if (tokens[1] == "hex") {
-          opcode = 0;
-          args = parseInt(tokens[2], 16);
-        } else if (tokens[1] == "skipcond") {
-          opcode = getOpcode(tokens[1]);
-          args = parseInt(tokens[2], 16); // Shift left by 10 bits for condition
-        } else {
-          throw new Error(
-            `Undefined symbol: '${
-              tokens[0] in symbolTable ? tokens[2] : tokens[0]
-            }'`
+      if (instruction === "dec") {
+        opcode = 0;
+        args = parseDecOperand(operand, lineNumber);
+      } else if (instruction === "hex") {
+        opcode = 0;
+        args = parseHexOperand(operand, lineNumber);
+      } else if (instruction === "skipcond") {
+        opcode = getOpcode(instruction);
+        if (!/^(000|400|800)$/i.test(operand)) {
+          throw new AssemblerError(
+            `Syntax error: instruction 'skipcond' requires one of 000, 400, 800`,
+            lineNumber
           );
         }
-      } else if (tokens.length === 2) {
-        if (
-          tokens[0] in symbolTable &&
-          instructionsWithArgs.includes(tokens[1])
-        ) {
-          throw new Error(
-            `Syntax error: instruction '${tokens[0]}' requires an argument`
-          );
-        } else if (tokens[0] in symbolTable) {
-          opcode = getOpcode(tokens[1]);
-          args = 0;
-        } else if (
-          tokens[1] in symbolTable &&
-          instructionsWithArgs.includes(tokens[0])
-        ) {
-          opcode = getOpcode(tokens[0]);
-          args = symbolTable[tokens[1]];
-        } else if (!instructionsWithArgs.includes(tokens[0])) {
-          throw new Error(
-            `Syntax error: instruction '${tokens[0]}' does not accept an argument`
-          );
-        } else if (tokens[0] == "dec") {
-          opcode = 0;
-          args = parseInt(tokens[1], 10);
-        } else if (tokens[0] == "hex") {
-          opcode = 0;
-          args = parseInt(tokens[1], 16);
-        } else if (tokens[0] == "skipcond") {
-          opcode = getOpcode(tokens[0]);
-          args = parseInt(tokens[1], 16); // Shift left by 10 bits for condition
-        } else {
-          throw new Error(`Undefined symbol: '${tokens[1]}'`);
+        args = Number.parseInt(operand, 16);
+      } else if (requiresArg) {
+        opcode = getOpcode(instruction);
+        const symbol = symbolTable[operand.toLowerCase()];
+        if (symbol === undefined) {
+          throw new AssemblerError(`Undefined symbol: '${operand}'`, lineNumber);
         }
-      } else if (tokens.length === 1) {
-        if (instructionsWithArgs.includes(tokens[0])) {
-          throw new Error(
-            `Syntax error: instruction '${tokens[0]}' requires an argument`
-          );
-        }
-        opcode = getOpcode(tokens[0]);
+        args = symbol;
+      } else {
+        opcode = getOpcode(instruction);
       }
 
       if (opcode === undefined) {
-        throw new Error(`Unknown instruction: ${tokens[0]}`);
+        throw new AssemblerError(`Unknown instruction: ${instruction}`, lineNumber);
       }
 
-      if (opcode === 32768 && args !== 0 && args !== 1024 && args !== 2048) {
-        throw new Error(
-          `Syntax error: instruction 'skipcond' requires a valid condition`
-        );
-      }
-      let code = opcode + args;
-      machineCode.push({ code });
-      secondPassAddress++;
+      machineCode.push({ code: opcode + args });
     });
 
     return {
@@ -168,9 +179,16 @@ export function assembleCode(sourceCode) {
       errors: [],
     };
   } catch (error) {
+    if (error instanceof AssemblerError) {
+      return {
+        success: false,
+        errors: [{ line: error.line, message: error.message }],
+      };
+    }
+
     return {
       success: false,
-      errors: [error.message],
+      errors: [{ line: null, message: error.message ?? "Unknown assembler error" }],
     };
   }
 }

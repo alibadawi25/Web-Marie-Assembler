@@ -155,20 +155,24 @@ export class MarieSimulator {
         this.writeMemory(address, this.AC);
         break;
       case 3: // ADD
-        const addResult = this.AC + this.readMemory(address);
-        if (addResult > 0xffff) {
-          throw new Error(
-            `ADD overflow: result ${addResult} exceeds 16-bit limit`
-          );
+        {
+          const addResult = this.AC + this.readMemory(address);
+          if (addResult > 0xffff) {
+            throw new Error(
+              `ADD overflow: result ${addResult} exceeds 16-bit limit`
+            );
+          }
+          this.AC = addResult;
         }
-        this.AC = addResult;
         break;
       case 4: // SUBT (Subtract)
-        const subtResult = this.AC - this.readMemory(address);
-        if (subtResult < 0) {
-          throw new Error(`SUBT underflow: result ${subtResult} is negative`);
+        {
+          const subtResult = this.AC - this.readMemory(address);
+          if (subtResult < 0) {
+            throw new Error(`SUBT underflow: result ${subtResult} is negative`);
+          }
+          this.AC = subtResult;
         }
-        this.AC = subtResult;
         break;
       case 5: // INPUT
         if (this.inputBuffer.length > 0) {
@@ -178,7 +182,6 @@ export class MarieSimulator {
           // Need input - pause execution
           this.PC--; // Decrement PC to retry this instruction when resumed
           this.pause();
-          console.log("Program paused - input required");
           if (this.inputCallback) {
             this.inputCallback(); // Call input callback to prompt for input
           }
@@ -197,19 +200,21 @@ export class MarieSimulator {
         }
         break;
       case 8: // SKIPCOND
-        const condition = (address >> 10) & 0x3; // Extract condition bits
-        switch (condition) {
-          case 0: // Skip if AC < 0
-            if (this.AC & 0x8000) this.PC++; // Check sign bit
-            break;
-          case 1: // Skip if AC = 0
-            if (this.AC === 0) this.PC++;
-            break;
-          case 2: // Skip if AC > 0
-            if (this.AC > 0 && !(this.AC & 0x8000)) this.PC++;
-            break;
-          default:
-            throw new Error(`Invalid SKIPCOND condition: ${condition}`);
+        {
+          const condition = (address >> 10) & 0x3; // Extract condition bits
+          switch (condition) {
+            case 0: // Skip if AC < 0
+              if (this.AC & 0x8000) this.PC++; // Check sign bit
+              break;
+            case 1: // Skip if AC = 0
+              if (this.AC === 0) this.PC++;
+              break;
+            case 2: // Skip if AC > 0
+              if (this.AC > 0 && !(this.AC & 0x8000)) this.PC++;
+              break;
+            default:
+              throw new Error(`Invalid SKIPCOND condition: ${condition}`);
+          }
         }
         break;
       case 9: // JUMP
@@ -219,26 +224,34 @@ export class MarieSimulator {
         this.AC = 0;
         break;
       case 11: // ADDI (Add Indirect)
-        const indirectAddress1 = this.readMemory(address);
-        const addiResult = this.AC + this.readMemory(indirectAddress1);
-        if (addiResult > 0xffff) {
-          throw new Error(
-            `ADDI overflow: result ${addiResult} exceeds 16-bit limit`
-          );
+        {
+          const indirectAddress1 = this.readMemory(address);
+          const addiResult = this.AC + this.readMemory(indirectAddress1);
+          if (addiResult > 0xffff) {
+            throw new Error(
+              `ADDI overflow: result ${addiResult} exceeds 16-bit limit`
+            );
+          }
+          this.AC = addiResult;
         }
-        this.AC = addiResult;
         break;
       case 12: // JUMPI (Jump Indirect)
-        const jumpTarget = this.readMemory(address);
-        this.PC = this.validateAddress(jumpTarget);
+        {
+          const jumpTarget = this.readMemory(address);
+          this.PC = this.validateAddress(jumpTarget);
+        }
         break;
       case 13: // LOADI (Load Indirect)
-        const indirectAddress2 = this.readMemory(address);
-        this.AC = this.readMemory(indirectAddress2);
+        {
+          const indirectAddress2 = this.readMemory(address);
+          this.AC = this.readMemory(indirectAddress2);
+        }
         break;
       case 14: // STOREI (Store Indirect)
-        const indirectAddress3 = this.readMemory(address);
-        this.writeMemory(indirectAddress3, this.AC);
+        {
+          const indirectAddress3 = this.readMemory(address);
+          this.writeMemory(indirectAddress3, this.AC);
+        }
         break;
       default:
         throw new Error(`Unknown instruction opcode: ${opcode}`);
@@ -255,10 +268,10 @@ export class MarieSimulator {
       this.inputBuffer = [...validatedInputs];
       return { success: true };
     } catch (error) {
-      console.log("Input validation error:", error.message);
       if (this.errorCallback) {
         this.errorCallback(error);
       }
+      return { success: false, error };
     }
   }
 
@@ -291,18 +304,14 @@ export class MarieSimulator {
       if (!this.running) return;
       try {
         this.step();
-        console.log(this.running); // Log the state after each step
         if (this.running) {
           // Continue stepping if still running
           setTimeout(stepLoop, this.stepDelay);
         }
       } catch (error) {
-        if (error.message === "INPUT_REQUIRED") {
-          console.log("Program paused - input required");
-        } else {
-          if (this.errorCallback) {
-            this.errorCallback(error);
-          }
+        this.running = false;
+        if (this.errorCallback) {
+          this.errorCallback(error);
         }
       }
     };
@@ -311,16 +320,13 @@ export class MarieSimulator {
 
   pause() {
     this.running = false;
-    console.log("Simulation paused");
   }
 
   resume() {
     if (this.running) {
-      console.log("Simulation is already running");
       return;
     }
     this.running = true;
-    console.log("Simulation resumed");
     this.run();
   }
 
