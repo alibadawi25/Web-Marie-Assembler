@@ -1,6 +1,70 @@
-.App {
+/* ─── App Shell ──────────────────────────────────────────────────────────── */
+
+.app-shell {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+/* ─── Header / Navbar ────────────────────────────────────────────────────── */
+
+.app-header {
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
-  min-height: 100vh;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 48px;
+  background: #111111;
+  border-bottom: 1px solid #2c2c2c;
+  z-index: 10;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  user-select: none;
+}
+
+.app-brand-icon {
+  color: #1890ff;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.app-brand-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e8e8e8;
+  letter-spacing: 0.03em;
+}
+
+.app-nav { display: flex; align-items: center; gap: 4px; }
+
+.app-nav-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #888;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: background 140ms, color 140ms;
+}
+
+.app-nav-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ddd;
+}
+
+/* ─── Body ───────────────────────────────────────────────────────────────── */
+
+.app-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
