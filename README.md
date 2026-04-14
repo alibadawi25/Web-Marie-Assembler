@@ -1,338 +1,203 @@
 # Web MARIE Assembler & Simulator
 
-## Overview
+A browser-based assembler and simulator for the MARIE (Machine Architecture that is Really Intuitive and Easy) architecture, built for students learning computer organisation and assembly programming.
 
-The Web MARIE Assembler is a modern, browser-based implementation of a MARIE (Machine Architecture that is Really Intuitive and Easy) computer simulator. This project provides both an assembler to convert assembly language into machine code and a real-time simulator to execute the assembled programs with an intuitive web interface built using React and Monaco Editor.
+---
 
 ## Features
 
-- **Modern Web Interface**: Built with React and Monaco Editor for a professional IDE-like experience
-- **Real-time Assembly**: Live syntax highlighting and error detection as you type
-- **Interactive Execution**: Step-by-step program execution with configurable speed control
-- **Multiple I/O Formats**: Support for Decimal, Hexadecimal, Binary, and Unicode input/output
-- **Smart Error Handling**: Comprehensive error detection with line highlighting and detailed messages
-- **Auto-completion**: Intelligent instruction and label completion
-- **Memory Simulation**: Complete 4096-word memory simulation with register validation
-- **Singleton Architecture**: Efficient memory management with single simulator instance
-- **Responsive Design**: Works seamlessly across different screen sizes
-- **Interactive Tutorial**: Built-in learning lab with guided missions, step-by-step traces, instruction reference, SKIPCOND decoder, and quiz
-- **Code Generation**: Auto-generate if-condition templates with proper jump logic
-- **XP System**: Earn experience points by completing tutorial missions
+### Editor
+- Monaco Editor (VS Code core) with MARIE syntax highlighting, autocomplete, and inline error markers
+- Real-time syntax checking as you type — errors highlighted before you assemble
+- Right-click → **Generate Code** to insert if-condition templates with proper jump logic
+- Project name editing, file load/save, and recent-projects history (up to 6)
 
-## Technology Stack
+### Toolbar
+- Two-row layout: file management on top, execution controls on the bottom
+- Speed control: **slider** on wide screens, **dropdown presets** (Instant / Fast / Normal / Slow / Step) on narrow screens
+- Output format toggle: Decimal · Hex · Binary · Unicode
+- Keyboard shortcuts shown inline on buttons
 
-- **Frontend**: React 19 with Hooks
-- **Code Editor**: Monaco Editor (VS Code editor core)
-- **UI Components**: Ant Design
-- **Styling**: CSS3 with custom themes
-- **Build Tool**: Vite
-- **Language**: JavaScript/JSX
+### Execution
+- Assemble → Run/Stop with live status badges
+- Configurable step delay (0 – 1000 ms)
+- INPUT instruction triggers a modal — supports Dec, Hex, Bin, Unicode input types
+- Unicode output mode renders as a continuous text block (newlines display as real line breaks)
+
+### Output panel
+- Drag the handle at the top of the panel to resize it (80 – 600 px)
+- Numbered output lines in Dec / Hex / Bin modes; flowing `<pre>` block in Unicode mode
+- Running / Assembled status indicators with animated pulse
+
+### Responsiveness
+- All controls visible at every width down to ~375 px
+- Keyboard shortcut badges hidden on very small screens to save space
+- File chip hidden below 680 px (filename still editable via project input)
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+S` | Save file |
+| `Ctrl+O` | Load / open file |
+| `Ctrl+Enter` | Assemble |
+| `Ctrl+F` | Find in editor |
+| `F5` | Run |
+| `Shift+F5` | Stop |
+
+---
 
 ## MARIE Architecture
 
 ### Registers
 
-- **AC (Accumulator)**: 16-bit primary register for arithmetic and logic operations
-- **IR (Instruction Register)**: 16-bit register holding the current instruction
-- **MAR (Memory Address Register)**: 12-bit register for memory addresses
-- **PC (Program Counter)**: 12-bit counter pointing to the next instruction
-- **MBR (Memory Buffer Register)**: 16-bit temporary storage for data transfers
+| Register | Size | Purpose |
+|---|---|---|
+| AC | 16-bit | Accumulator — primary arithmetic register |
+| IR | 16-bit | Instruction register |
+| MAR | 12-bit | Memory address register |
+| MBR | 16-bit | Memory buffer register |
+| PC | 12-bit | Program counter |
 
 ### Memory
 
-- **Size**: 4096 words (12-bit addressing)
-- **Word Size**: 16 bits
-- **Addressing Modes**: Direct and indirect addressing
-- **Validation**: Automatic bounds checking for all memory operations
+- **4096 words** (12-bit addressing), **16 bits** per word
+- Direct and indirect addressing modes
+- 2's complement arithmetic — negative SUBT results wrap correctly
 
-## Instruction Set
+### Instruction Set
 
-### Instructions with Arguments
+| Instruction | Opcode | Description |
+|---|---|---|
+| `JNS addr` | 0x0 | Jump and store return address |
+| `LOAD addr` | 0x1 | Load memory → AC |
+| `STORE addr` | 0x2 | AC → memory |
+| `ADD addr` | 0x3 | AC += memory (wraps 2's complement) |
+| `SUBT addr` | 0x4 | AC -= memory (wraps 2's complement) |
+| `INPUT` | 0x5 | Read input → AC |
+| `OUTPUT` | 0x6 | AC → output |
+| `HALT` | 0x7 | Stop execution |
+| `SKIPCOND cond` | 0x8 | Skip next if condition met (000/400/800) |
+| `JUMP addr` | 0x9 | Unconditional jump |
+| `CLEAR` | 0xA | AC = 0 |
+| `ADDI addr` | 0xB | AC += memory[memory[addr]] |
+| `JUMPI addr` | 0xC | PC = memory[addr] |
+| `LOADI addr` | 0xD | AC = memory[memory[addr]] |
+| `STOREI addr` | 0xE | memory[memory[addr]] = AC |
 
-| Instruction | Opcode | Hex    | Description                   |
-| ----------- | ------ | ------ | ----------------------------- |
-| JNS         | 0000   | 0x0000 | Jump and Store                |
-| LOAD        | 0001   | 0x1000 | Load from memory to AC        |
-| STORE       | 0010   | 0x2000 | Store AC to memory            |
-| ADD         | 0011   | 0x3000 | Add memory value to AC        |
-| SUBT        | 0100   | 0x4000 | Subtract memory value from AC |
-| JUMP        | 1001   | 0x9000 | Unconditional jump            |
-| ADDI        | 1011   | 0xB000 | Add indirect                  |
-| JUMPI       | 1100   | 0xC000 | Jump indirect                 |
-| LOADI       | 1101   | 0xD000 | Load indirect                 |
-| STOREI      | 1110   | 0xE000 | Store indirect                |
+**SKIPCOND conditions:** `000` skip if AC < 0 · `400` skip if AC = 0 · `800` skip if AC > 0
 
-### Instructions without Arguments
+### Directives
 
-| Instruction | Opcode | Hex    | Description            |
-| ----------- | ------ | ------ | ---------------------- |
-| INPUT       | 0101   | 0x5000 | Read input to AC       |
-| OUTPUT      | 0110   | 0x6000 | Write AC to output     |
-| HALT        | 0111   | 0x7000 | Stop program execution |
-| CLEAR       | 1010   | 0xA000 | Clear AC (set to 0)    |
+| Directive | Example | Notes |
+|---|---|---|
+| `DEC n` | `x, DEC 42` | Declare signed decimal word |
+| `HEX n` | `y, HEX 2A` | Declare hex word |
+| `ORG addr` | `ORG 100` | Set load address (hex) — PC starts here |
 
-### Special Instructions
+---
 
-| Instruction | Opcode | Hex    | Description                                              |
-| ----------- | ------ | ------ | -------------------------------------------------------- |
-| SKIPCOND    | 1000   | 0x8000 | Skip next instruction based on condition (000, 400, 800) |
+## Assembler Correctness
 
-**SKIPCOND Conditions:**
+- **Labels are case-sensitive** — `T` and `t` are distinct identifiers (matches the original MARIE spec)
+- **Instructions are case-insensitive** — `LOAD`, `load`, `Load` all work
+- **`ORG` support** — sets the memory load address; the simulator starts PC at that address so hardcoded pointer values in data sections line up correctly
+- **2's complement arithmetic** — `SUBT` and `ADD` wrap mod 2¹⁶ instead of throwing; `SKIPCOND 000` correctly detects negative results via the sign bit
 
-- `SKIPCOND 000`: Skip if AC < 0
-- `SKIPCOND 400`: Skip if AC = 0
-- `SKIPCOND 800`: Skip if AC > 0
+---
 
-### Data Declaration
+## Assembly Syntax
 
-| Directive | Description               | Example      |
-| --------- | ------------------------- | ------------ |
-| DEC       | Declare decimal value     | `x, DEC 123` |
-| HEX       | Declare hexadecimal value | `y, HEX A0F` |
-
-## Assembly Language Syntax
-
-### Basic Format
+```
+[LABEL,] INSTRUCTION [OPERAND]   // optional comment
+```
 
 ```assembly
-[LABEL,] INSTRUCTION [OPERAND]
-```
+// Add two numbers
+ORG 100
+        LOAD   X
+        ADD    Y
+        STORE  Result
+        OUTPUT
+        HALT
 
-### Examples
+X,      DEC 15
+Y,      DEC 25
+Result, DEC 0
+```
 
 ```assembly
-// Simple arithmetic program
-start, LOAD x          // Load value from address x into AC
-       ADD y           // Add value from address y to AC
-       STORE result    // Store AC value to address result
-       LOAD result     // Load result for output
-       OUTPUT          // Output AC value
-       HALT           // Stop execution
+// Print "Hi" in unicode mode
+        LOAD   H
+        OUTPUT
+        LOAD   i
+        OUTPUT
+        HALT
 
-// Data declarations
-x, DEC 15             // Declare variable x with value 15
-y, DEC 25             // Declare variable y with value 25
-result, DEC 0         // Declare variable result with value 0
+H, HEX 48   // 'H'
+i, HEX 69   // 'i'
 ```
 
-### Advanced Example - Loop with Input
-
-```assembly
-// Program that reads numbers and outputs their sum
-loop, INPUT            // Read a number
-      SKIPCOND 400     // Skip if input is 0 (exit condition)
-      JUMP continue    // Continue if not 0
-      JUMP end         // Jump to end if 0
-
-continue, ADD sum      // Add input to running sum
-          STORE sum    // Store updated sum
-          JUMP loop    // Loop back for next input
-
-end, LOAD sum         // Load final sum
-     OUTPUT           // Output the result
-     HALT             // Stop program
-
-sum, DEC 0            // Storage for sum
-```
-
-## Web Interface Features
-
-### Code Editor
-
-- **Syntax Highlighting**: MARIE-specific syntax highlighting with custom theme
-- **Error Detection**: Real-time error detection with line highlighting
-- **Auto-completion**: Tab completion for instructions and defined labels
-- **Line Numbers**: Automatic line numbering
-- **Dark Theme**: Professional dark theme optimized for coding
-
-### Control Panel
-
-- **Speed Control**: Adjustable execution speed from 0ms to 1000ms per step with real-time display
-- **Output Format**: Toggle between Decimal, Hexadecimal, Binary, and Unicode output
-- **Assemble Button**: Convert assembly code to machine code with error highlighting
-- **Run/Stop Button**: Start/stop program execution with proper state management and visual indicators
-
-### Input/Output System
-
-- **Modal Input**: Clean modal dialog for program input
-- **Multiple Input Types**:
-  - Decimal: Standard base-10 numbers
-  - Hexadecimal: Base-16 numbers (with 0x prefix display)
-  - Binary: Base-2 numbers (with 0b prefix display)
-  - Unicode: Single character input (converts to ASCII value)
-- **Real-time Output**: Live output display with automatic scrolling
-- **Error Display**: Comprehensive error messages with context
-
-## Error Handling
-
-### Syntax Errors
-
-- **Missing Arguments**: Instructions requiring arguments without operands
-- **Invalid Instructions**: Unrecognized instruction names
-- **Undefined Labels**: References to labels that don't exist
-- **Invalid Numbers**: Malformed decimal or hexadecimal values
-- **Label Format**: Improper label syntax (must start line and end with comma)
-
-### Runtime Errors
-
-- **Memory Bounds**: Automatic checking for valid memory addresses (0-4095)
-- **Register Overflow**: 16-bit register value validation (0-65535)
-- **Input Validation**: Range checking for all input values
-- **Execution State**: Proper handling of program start/stop states
-
-### Visual Feedback
-
-- **Line Highlighting**: Red highlighting for syntax errors
-- **Error Markers**: Monaco editor error markers with detailed messages
-- **Inline Error Messages**: Detailed error feedback in the terminal panel
-- **User Alerts**: User-friendly alert dialogs for input errors
-
-## Architecture & Implementation
-
-### Frontend Structure
-
-```text
-src/
-|-- components/
-|   |-- CodeEditor.jsx          # Main editor component
-|   `-- CodeEditor.css          # Component styling
-|-- pages/
-|   `-- TutorialPage.jsx        # In-app tutorial page
-|-- utils/
-|   |-- marieAssembler.js       # Assembly to machine code conversion
-|   |-- marieSimulator.js       # MARIE machine simulation
-|   `-- tester.js               # Local testing utility
-|-- App.jsx                     # Main application component
-`-- main.jsx                    # Application entry point
-```
-
-### Key Components
-
-#### MarieSimulator (Singleton)
-
-- **Memory Management**: 4096-word memory with bounds checking
-- **Register Simulation**: Complete MARIE register set with validation
-- **Execution Engine**: Fetch-decode-execute cycle with configurable timing
-- **Callback System**: Real-time communication with React components
-
-#### MarieAssembler
-
-- **Two-Pass Assembly**: Symbol table generation and machine code translation
-- **Error Detection**: Comprehensive syntax and semantic validation
-- **Label Resolution**: Automatic address calculation for labels and jumps
-
-#### CodeEditor Component
-
-- **Monaco Integration**: Full-featured code editor with MARIE language support
-- **State Management**: React hooks for all application state
-- **Event Handling**: User interaction management and callback setup
-
-### Assembly Process
-
-1. **Lexical Analysis**: Parse assembly code into tokens
-2. **Symbol Table**: First pass to collect labels and addresses
-3. **Code Generation**: Second pass to generate machine code
-4. **Validation**: Syntax and semantic error checking
-5. **Memory Loading**: Load machine code into simulator memory
-
-### Execution Process
-
-1. **Initialization**: Reset registers and load program
-2. **Fetch-Decode-Execute**:
-   - Fetch instruction from memory[PC]
-   - Decode opcode and operand
-   - Execute instruction and update registers
-   - Handle special cases (INPUT, conditional jumps)
-3. **State Updates**: Real-time UI updates through callbacks
-4. **Error Handling**: Graceful handling of runtime errors
+---
 
 ## Getting Started
 
-### Prerequisites
+```bash
+git clone https://github.com/alibadawi25/Web-Marie-Assembler.git
+cd Web-Marie-Assembler
+npm install
+npm run dev
+```
 
-- Node.js 16+ and npm
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/alibadawi25/Web-Marie-Assembler.git
-   cd Web-Marie-Assembler
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Start development server**
-
-   ```bash
-   npm run dev
-   ```
-
-4. **Open browser**
-   Navigate to `http://localhost:5173`
-
-### Building for Production
+Open `http://localhost:5173`.
 
 ```bash
-npm run build
-npm run preview
+npm run build   # production build
+npm run preview # preview production build
 ```
 
-## Usage Guide
+---
 
-### Learning MARIE (New Users)
+## Testing
 
-1. **Visit the Tutorial** at `/tutorial` to learn step-by-step
-2. **Complete guided missions** with interactive step-through traces
-3. **Use the SKIPCOND decoder** to understand conditional skips
-4. **Take the quiz** to validate your knowledge
-5. **Copy working examples** directly to the editor
-
-### Writing Your First Program
-
-1. **Open the application** in your web browser
-2. **Clear the editor** and enter your assembly code
-3. **Use the syntax** shown in examples above
-4. **Watch for errors** - they'll be highlighted in red
-5. **Click "Assemble"** to convert to machine code
-6. **Click "Run"** to execute your program
-7. **Interact with INPUT** instructions via modal dialogs
-8. **View output** in the terminal section below the editor
-
-### Example Session
-
-```assembly
-// Echo program - reads input and outputs it
-start, INPUT           // Prompt for input
-       OUTPUT          // Display the input
-       HALT           // Stop execution
+```bash
+node --experimental-vm-modules src/utils/tester.js
 ```
 
-1. Type the code above
-2. Click "Assemble" - should succeed with no errors
-3. Click "Run" - input modal will appear
-4. Enter a number (e.g., 42)
-5. See the output displayed below
-6. Program stops automatically
+67 tests covering: all instructions, data directives, ORG, case-sensitive labels, 2's complement arithmetic, error detection, comments, edge cases, and machine code output values.
 
-### Tips for Success
+---
 
-- **Always end with HALT** to properly terminate programs
-- **Declare variables** with labels before using them
-- **Use meaningful label names** for better readability
-- **Test with small programs** before building complex ones
-- **Check the output format** setting for expected display format
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── CodeEditor.jsx      # Main editor + toolbar + terminal
+│   └── CodeEditor.css
+├── pages/
+│   └── TutorialPage.jsx    # Interactive tutorial with missions & quiz
+├── utils/
+│   ├── marieAssembler.js   # Two-pass assembler
+│   ├── marieSimulator.js   # Fetch-decode-execute simulator
+│   └── tester.js           # Test suite
+├── App.jsx
+└── main.jsx
+public/
+└── favicon.svg             # Brand icon (matches in-app M mark)
+```
+
+---
+
+## Tech Stack
+
+- **React 19** with hooks
+- **Monaco Editor** — VS Code editor core
+- **Ant Design** — UI components
+- **Vite** — build tool
+
+---
 
 ## Acknowledgments
 
-- MARIE architecture designed by Linda Null and Julia Lobur
-- Monaco Editor by Microsoft for the excellent code editing experience
-- Ant Design team for the beautiful UI components
-- React team for the powerful frontend framework
-
+MARIE architecture by Linda Null and Julia Lobur. Monaco Editor by Microsoft. UI components by Ant Design.

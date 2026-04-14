@@ -93,20 +93,30 @@ export function assembleCode(sourceCode) {
     const symbolTable = {};
 
     let address = 0;
+    let startAddress = 0; // set by the first ORG directive
+    let hasOrg = false;
     lines.forEach((line, index) => {
       const lineNumber = index + 1;
       const parsed = parseLine(line, lineNumber);
       if (!parsed) return;
 
+      // ORG: set the current address counter (value is hex).
+      if (parsed.instruction === "org") {
+        const orgAddr = parseHexOperand(parsed.operand, lineNumber);
+        if (!hasOrg) { startAddress = orgAddr; hasOrg = true; }
+        address = orgAddr;
+        return; // ORG emits no machine word
+      }
+
       if (parsed.label) {
-        const labelKey = parsed.label.toLowerCase();
-        if (labelKey in symbolTable) {
+        // Labels are case-sensitive in MARIE (e.g. 'T' for Tan ≠ 't' for Triangle).
+        if (parsed.label in symbolTable) {
           throw new AssemblerError(
             `Duplicate label: '${parsed.label}'`,
             lineNumber
           );
         }
-        symbolTable[labelKey] = address;
+        symbolTable[parsed.label] = address;
       }
 
       parsedLines.push(parsed);
@@ -117,8 +127,8 @@ export function assembleCode(sourceCode) {
     });
 
     parsedLines.forEach(({ lineNumber, instruction, operand }) => {
-      // Label-only line; no emitted machine instruction.
-      if (!instruction) return;
+      // Label-only and ORG lines emit no machine instruction.
+      if (!instruction || instruction === "org") return;
 
       const requiresArg = instructionsWithArgs.has(instruction);
 
@@ -156,7 +166,8 @@ export function assembleCode(sourceCode) {
         args = Number.parseInt(operand, 16);
       } else if (requiresArg) {
         opcode = getOpcode(instruction);
-        const symbol = symbolTable[operand.toLowerCase()];
+        // Label lookup is case-sensitive to match MARIE spec.
+        const symbol = symbolTable[operand];
         if (symbol === undefined) {
           throw new AssemblerError(`Undefined symbol: '${operand}'`, lineNumber);
         }
@@ -176,6 +187,7 @@ export function assembleCode(sourceCode) {
       success: true,
       machineCode,
       symbolTable,
+      startAddress,
       errors: [],
     };
   } catch (error) {

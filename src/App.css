@@ -5,7 +5,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: #1a1a1a;
+  background: #141414;
 }
 
 /* ─── Header / Navbar ────────────────────────────────────────────────────── */
@@ -15,48 +15,62 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  height: 48px;
-  background: #111111;
-  border-bottom: 1px solid #2c2c2c;
+  padding: 0 16px;
+  height: 42px;
+  background: #0e0e0e;
+  border-bottom: 1px solid #222;
   z-index: 10;
 }
 
 .app-brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   user-select: none;
 }
 
 .app-brand-icon {
-  color: #1890ff;
-  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #1a3a6a;
+  color: #5aaef0;
+  font-size: 0.7rem;
   line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
 .app-brand-name {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: #e8e8e8;
-  letter-spacing: 0.03em;
+  color: #c8c8c8;
+  letter-spacing: 0.02em;
 }
 
-.app-nav { display: flex; align-items: center; gap: 4px; }
+.app-brand-name em {
+  font-style: normal;
+  color: #4e9bf0;
+}
+
+.app-nav { display: flex; align-items: center; gap: 2px; }
 
 .app-nav-link {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #888;
+  color: #666;
   text-decoration: none;
-  padding: 5px 12px;
-  border-radius: 6px;
-  transition: background 140ms, color 140ms;
+  padding: 4px 10px;
+  border-radius: 5px;
+  transition: background 130ms, color 130ms;
 }
 
 .app-nav-link:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #ddd;
+  background: rgba(255, 255, 255, 0.06);
+  color: #bbb;
 }
 
 /* ─── Body ───────────────────────────────────────────────────────────────── */

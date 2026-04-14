@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background square with rounded corners -->
+  <rect width="32" height="32" rx="7" fill="#1a3a6a"/>
+  <!-- M letterform -->
+  <text
+    x="16"
+    y="23"
+    font-family="system-ui, -apple-system, Arial, sans-serif"
+    font-size="20"
+    font-weight="900"
+    fill="#5aaef0"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    letter-spacing="-0.5"
+  >M</text>
+</svg>

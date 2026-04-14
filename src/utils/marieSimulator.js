@@ -47,14 +47,11 @@ export class MarieSimulator {
     this.onProgramEnd = null;
   }
 
-  // Helper method to validate 16-bit values
-  validateRegisterValue(value, registerName) {
-    if (value < 0 || value > 0xffff) {
-      throw new Error(
-        `${registerName} value ${value} is out of bounds (0-65535)`
-      );
-    }
-    return value & 0xffff; // Ensure 16-bit value
+  // Helper method to validate 16-bit values (wraps in 2's complement)
+  validateRegisterValue(value) {
+    // Wrap to unsigned 16-bit. Negative results (from SUBT etc.) become
+    // their 2's complement representation (e.g. -1 → 0xFFFF = 65535).
+    return ((value % 0x10000) + 0x10000) % 0x10000;
   }
 
   // Helper method to validate 12-bit addresses
@@ -112,16 +109,17 @@ export class MarieSimulator {
     this.memory[address] = value;
   }
 
-  loadProgram(program) {
+  loadProgram(program, startAddress = 0) {
     this.memory = new Array(4096).fill(0); // Reset memory
     program.forEach((instruction, index) => {
-      if (index < this.memory.length) {
-        this.memory[index] = instruction;
+      const addr = startAddress + index;
+      if (addr < this.memory.length) {
+        this.memory[addr] = instruction;
       }
     });
-    this.PC = 0; // Reset program counter
-    this.running = true; // Start simulation
-    this.outputBuffer = []; // Clear output
+    this.PC = startAddress; // Start execution at the ORG address
+    this.running = true;
+    this.outputBuffer = [];
   }
 
   step() {
@@ -154,25 +152,11 @@ export class MarieSimulator {
       case 2: // STORE
         this.writeMemory(address, this.AC);
         break;
-      case 3: // ADD
-        {
-          const addResult = this.AC + this.readMemory(address);
-          if (addResult > 0xffff) {
-            throw new Error(
-              `ADD overflow: result ${addResult} exceeds 16-bit limit`
-            );
-          }
-          this.AC = addResult;
-        }
+      case 3: // ADD (wraps in 2's complement)
+        this.AC = this.validateRegisterValue(this.AC + this.readMemory(address));
         break;
-      case 4: // SUBT (Subtract)
-        {
-          const subtResult = this.AC - this.readMemory(address);
-          if (subtResult < 0) {
-            throw new Error(`SUBT underflow: result ${subtResult} is negative`);
-          }
-          this.AC = subtResult;
-        }
+      case 4: // SUBT — result may be negative (2's complement); SKIPCOND 000 checks sign bit
+        this.AC = this.validateRegisterValue(this.AC - this.readMemory(address));
         break;
       case 5: // INPUT
         if (this.inputBuffer.length > 0) {

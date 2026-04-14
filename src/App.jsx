@@ -7,8 +7,8 @@ function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-brand">
-          <span className="app-brand-icon">▸</span>
-          <span className="app-brand-name">MARIE Assembler</span>
+          <span className="app-brand-icon">M</span>
+          <span className="app-brand-name"><em>MARIE</em> Assembler</span>
         </div>
         <nav className="app-nav">
           <Link to="/tutorial" className="app-nav-link">Tutorial</Link>
