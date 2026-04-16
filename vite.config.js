@@ -16,20 +16,13 @@ export default defineConfig({
             return "monaco-react";
           }
 
-          if (id.includes("node_modules/@ant-design/icons") || id.includes("node_modules/@ant-design/icons-svg")) {
-            return "ant-icons";
-          }
-
-          if (id.includes("node_modules/rc-")) {
-            return "ant-rc";
-          }
-
-          if (id.includes("node_modules/antd")) {
-            return "antd";
-          }
-
-          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/react-router")) {
-            return "react-vendor";
+          if (
+            id.includes("node_modules/antd") ||
+            id.includes("node_modules/rc-") ||
+            id.includes("node_modules/@ant-design/icons") ||
+            id.includes("node_modules/@ant-design/icons-svg")
+          ) {
+            return "antd-vendor";
           }
         },
       },
