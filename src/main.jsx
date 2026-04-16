@@ -1,10 +1,11 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import TutorialPage from "./pages/TutorialPage.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ConfigProvider } from "antd";
+
+const TutorialPage = lazy(() => import("./pages/TutorialPage.jsx"));
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -20,10 +21,12 @@ createRoot(document.getElementById("root")).render(
       }}
     >
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/tutorial" element={<TutorialPage />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/tutorial" element={<TutorialPage />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </ConfigProvider>
   </StrictMode>
