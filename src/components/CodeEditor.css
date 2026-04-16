@@ -290,6 +290,12 @@
   gap: 6px;
 }
 
+/* Assemble icon — hidden on desktop, shown on mobile via media query */
+.toolbar-btn-icon {
+  display: none;
+  flex-shrink: 0;
+}
+
 .toolbar-btn-assemble {
   background: #1d3f6a !important;
   color: #72b8f5 !important;
@@ -558,6 +564,13 @@
   background: rgba(255, 60, 60, 0.12);
 }
 
+/* ─── Executing Line Highlight ───────────────────────────────────────────── */
+
+.executingLineHighlight {
+  background: rgba(80, 200, 120, 0.10);
+  border-left: 2px solid #4ecf7c;
+}
+
 /* ─── Input Field (modals) ───────────────────────────────────────────────── */
 
 .input-field {
@@ -605,6 +618,37 @@
   }
   .toolbar-kbd {
     display: none;
+  }
+}
+
+/* Compact text — hide kbd hints and badges, keep labels */
+@media (max-width: 780px) {
+  .toolbar-assembled-badge,
+  .toolbar-stepping-badge {
+    display: none;
+  }
+  .toolbar-kbd {
+    display: none;
+  }
+  .toolbar-row-exec .toolbar-label {
+    display: none;
+  }
+  .toolbar-section-exec {
+    gap: 5px;
+  }
+}
+
+/* Icon-only — hide text labels, show CPU icon for assemble */
+@media (max-width: 520px) {
+  .toolbar-btn-label {
+    display: none;
+  }
+  .toolbar-btn {
+    min-width: 0 !important;
+    padding: 0 9px !important;
+  }
+  .toolbar-btn-icon {
+    display: inline-block;
   }
 }
 
@@ -857,6 +901,35 @@
 }
 
 /* ── Input fields inside modal — dark theme ── */
+.gen-op-dropdown {
+  background: #151515 !important;
+  border: 1px solid #262626 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.42) !important;
+  padding: 6px !important;
+}
+
+.gen-op-dropdown .ant-select-item {
+  color: #d7d7d7 !important;
+  border-radius: 7px !important;
+  font-size: 0.78rem !important;
+  font-family: "Menlo", "Consolas", monospace !important;
+}
+
+.gen-op-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: #1f2630 !important;
+}
+
+.gen-op-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: #24364c !important;
+}
+
+.gen-op-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-content,
+.gen-op-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) .ant-select-item-option-state,
+.gen-op-dropdown .ant-select-item-option-content {
+  color: #e7edf5 !important;
+}
+
 .generate-code-modal .ant-input {
   background: #1e1e1e !important;
   border: 1px solid #2e2e2e !important;
@@ -908,4 +981,321 @@
   white-space: pre;
   overflow-x: auto;
   min-height: 58px;
+}
+
+/* ─── Register strip — mobile only ──────────────────────────────────────── */
+
+.register-viewer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  background: #111;
+  border-bottom: 1px solid #1e1e1e;
+  padding: 4px 12px;
+  font-family: "Menlo", "Consolas", "Courier New", monospace;
+}
+
+/* Hidden on desktop — shown only on narrow screens */
+.register-viewer-mobile {
+  display: none;
+}
+
+.register-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 10px 2px 0;
+  border-right: 1px solid #222;
+  margin-right: 10px;
+}
+
+.register-cell:last-of-type {
+  border-right: none;
+  margin-right: 0;
+}
+
+.register-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.register-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4ecf7c;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Two-column terminal layout ─────────────────────────────────────────── */
+
+.terminal-columns {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.terminal-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  transition: flex-basis 0.15s ease;
+}
+
+/* Collapsed state: shrink to header only */
+.terminal-col--collapsed {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+}
+
+.terminal-col-output {
+  flex: 1 1 0;
+  min-width: 0;
+  border-right: 1px solid #1e1e1e;
+}
+
+.terminal-col-state {
+  /* width controlled via inline style; these are fallbacks */
+  min-width: 140px;
+  max-width: 520px;
+  background: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Collapse toggle button (desktop: right col only; mobile: both cols) ── */
+.terminal-collapse-btn {
+  display: none; /* hidden on desktop by default */
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 9px;
+  padding: 2px 6px;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+.terminal-collapse-btn:hover {
+  color: #aaa;
+  background: rgba(255,255,255,0.06);
+}
+
+/* ── Horizontal drag handle between output and state columns ── */
+.state-resize-handle {
+  flex-shrink: 0;
+  width: 6px;
+  cursor: ew-resize;
+  background: transparent;
+  position: relative;
+  z-index: 5;
+  transition: background 0.15s;
+}
+
+.state-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 28px;
+  border-radius: 2px;
+  background: #222;
+  transition: background 0.15s, height 0.15s;
+}
+
+.state-resize-handle:hover::after,
+.state-resize-handle:active::after {
+  background: #4a90d9;
+  height: 40px;
+}
+
+/* ─── State panel (registers + memory inside right col) ──────────────────── */
+
+.state-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
+
+.state-section {
+  margin-bottom: 10px;
+}
+
+.state-section-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #3a3a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 12px 4px;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.state-reg-grid,
+.state-mem-grid {
+  font-family: "Menlo", "Consolas", "Courier New", monospace;
+}
+
+.state-reg-row,
+.state-mem-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 12px;
+  border-radius: 3px;
+  transition: background 0.1s;
+}
+
+.state-reg-row:hover,
+.state-mem-row:hover {
+  background: #161616;
+}
+
+.state-reg-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 30px;
+}
+
+.state-reg-hex {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4ecf7c;
+  letter-spacing: 0.02em;
+  min-width: 62px;
+}
+
+.state-reg-dec {
+  font-size: 0.67rem;
+  color: #3d3d3d;
+}
+
+.state-mem-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #8d6ec2;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.state-mem-addr {
+  font-size: 0.6rem;
+  color: #333;
+}
+
+.state-mem-hex {
+  font-size: 0.68rem;
+  color: #4ecf7c;
+  font-weight: 600;
+}
+
+.state-mem-dec {
+  font-size: 0.63rem;
+  color: #3d3d3d;
+  min-width: 24px;
+  text-align: right;
+}
+
+/* ─── Step / Stepping toolbar styles ────────────────────────────────────── */
+
+.toolbar-btn-step {
+  background: transparent !important;
+  border: 1px solid #3a5a3a !important;
+  color: #4ecf7c !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+.toolbar-btn-step:hover:not(:disabled) {
+  background: rgba(78, 207, 124, 0.1) !important;
+  border-color: #4ecf7c !important;
+}
+.toolbar-btn-step:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+
+.toolbar-stepping-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #4ecf7c;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toolbar-stepping-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ecf7c;
+  animation: pulse-step 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-step {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* On narrow screens: stack terminal cols vertically, both collapsible */
+@media (max-width: 640px) {
+  .register-viewer-mobile {
+    display: none;
+  }
+
+  .terminal-columns {
+    flex-direction: column;
+  }
+
+  .terminal-col-output {
+    flex: 1 1 0;
+    border-right: none;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  .terminal-col-state {
+    display: flex !important;
+    flex-basis: 0 !important;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .terminal-col--collapsed {
+    flex: 0 0 auto !important;
+  }
+
+  .state-resize-handle {
+    display: none;
+  }
+
+  .terminal-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+  }
 }

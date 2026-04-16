@@ -19,6 +19,7 @@ export class MarieSimulator {
     this.inputCallback = null; // Add callback for input operations
     this.onProgramEnd = null; // Add callback for when program ends
     this.stepDelay = 100; // Delay in milliseconds for each step
+    this.onStep = null; // Called after each instruction with register snapshot
     // Store the instance
     MarieSimulator.instance = this;
   }
@@ -45,6 +46,7 @@ export class MarieSimulator {
     this.outputCallback = null;
     this.inputCallback = null;
     this.onProgramEnd = null;
+    this.onStep = null;
   }
 
   // Helper method to validate 16-bit values (wraps in 2's complement)
@@ -111,6 +113,12 @@ export class MarieSimulator {
 
   loadProgram(program, startAddress = 0) {
     this.memory = new Array(4096).fill(0); // Reset memory
+    this._AC = 0;
+    this._IR = 0;
+    this._MAR = 0;
+    this._MBR = 0;
+    this.inputBuffer = [];
+    this.outputBuffer = [];
     program.forEach((instruction, index) => {
       const addr = startAddress + index;
       if (addr < this.memory.length) {
@@ -119,7 +127,6 @@ export class MarieSimulator {
     });
     this.PC = startAddress; // Start execution at the ORG address
     this.running = true;
-    this.outputBuffer = [];
   }
 
   step() {
@@ -138,6 +145,10 @@ export class MarieSimulator {
 
     // Execute the instruction
     this.executeInstruction(opcode, address);
+
+    if (this.onStep) {
+      this.onStep({ AC: this._AC, PC: this._PC, IR: this._IR, MAR: this._MAR, MBR: this._MBR });
+    }
   }
 
   executeInstruction(opcode, address) {

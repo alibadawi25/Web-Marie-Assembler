@@ -180,7 +180,7 @@ export function assembleCode(sourceCode) {
         throw new AssemblerError(`Unknown instruction: ${instruction}`, lineNumber);
       }
 
-      machineCode.push({ code: opcode + args });
+      machineCode.push({ code: opcode + args, lineNumber });
     });
 
     return {
