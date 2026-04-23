@@ -1,6 +1,15 @@
 import { LABEL_REF_INSTRUCTIONS } from "./constants.js";
 
 const INSTRUCTION_INFO = {
+  loadimmi: {
+    detail: "AC ← immediate (12-bit literal)",
+    doc: "**Syntax:** `LOADIMMI value`\n\nLoads a 12-bit immediate value directly into AC (no memory access). `value` is a decimal (0–4095) or hex (0–FFF) literal.\n\n*Example:*\n```\nloadimmi 5\nloadimmi FF\n```\n\n`CLEAR` is an alias for `LOADIMMI 0`.",
+    snippet: "loadimmi ${1:0}",
+  },
+  adr: {
+    detail: "address of label (data word)",
+    doc: "**Syntax:** `[label,] ADR target`\n\nStores the memory address of `target` as a 16-bit data word. Useful with `LOADI`/`STOREI`/`JUMPI` for indirect addressing.\n\n*Example:*\n```\nPtr, adr X\n```",
+  },
   load: {
     detail: "AC ← Memory[addr]",
     doc: "**Syntax:** `LOAD addr`\n\nLoads the value at `addr` into the accumulator (AC).\n\n*Example:*\n```\nload X\n```",
@@ -94,9 +103,11 @@ const INSTRUCTION_SORT_ORDER = [
   "skipcond",
   "jump",
   "clear",
+  "loadimmi",
   "jns",
   "dec",
   "hex",
+  "adr",
   "org",
   "addi",
   "jumpi",
@@ -106,11 +117,16 @@ const INSTRUCTION_SORT_ORDER = [
 
 export function registerMarieLanguage(monaco, identifierRef, symbolTableRef) {
   monaco.languages.register({ id: "marie" });
+  monaco.languages.setLanguageConfiguration("marie", {
+    comments: { lineComment: "//" },
+    brackets: [],
+    autoClosingPairs: [],
+  });
   monaco.languages.setMonarchTokensProvider("marie", {
     tokenizer: {
       root: [
         [
-          /\b(?:load|store|add|subt|input|output|halt|skipcond|jump|clear|addi|jumpi|loadi|storei|jns|dec|hex)\b/,
+          /\b(?:load|store|add|subt|input|output|halt|skipcond|jump|clear|loadimmi|addi|jumpi|loadi|storei|jns|dec|hex|adr|org)\b/i,
           "keyword",
         ],
         [/^\s*[a-zA-Z_][a-zA-Z0-9_]*\s*,/, "identifier-declaration"],
@@ -178,7 +194,7 @@ export function registerMarieLanguage(monaco, identifierRef, symbolTableRef) {
           const info = INSTRUCTION_INFO[instruction];
           const needsOperand =
             LABEL_REF_INSTRUCTIONS.has(instruction) ||
-            ["dec", "hex", "org"].includes(instruction);
+            ["dec", "hex", "org", "loadimmi"].includes(instruction);
           const hasSnippet = Boolean(info.snippet);
 
           suggestions.push({

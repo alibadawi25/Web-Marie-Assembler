@@ -5,13 +5,20 @@ export function usePanelResizers({
   setTerminalHeight,
   statePanelWidth,
   setStatePanelWidth,
+  rtlPanelWidth,
+  setRtlPanelWidth,
 }) {
   const isDragging = useRef(false);
   const dragStartY = useRef(0);
   const dragStartHeight = useRef(0);
+
   const isHorizontalDragging = useRef(false);
   const dragStartX = useRef(0);
   const dragStartWidth = useRef(0);
+
+  const isRtlDragging = useRef(false);
+  const rtlDragStartX = useRef(0);
+  const rtlDragStartWidth = useRef(0);
 
   useEffect(() => {
     function onMouseMove(event) {
@@ -26,12 +33,19 @@ export function usePanelResizers({
         const nextWidth = Math.min(520, Math.max(140, dragStartWidth.current + delta));
         setStatePanelWidth(nextWidth);
       }
+
+      if (isRtlDragging.current) {
+        const delta = event.clientX - rtlDragStartX.current;
+        const nextWidth = Math.min(400, Math.max(120, rtlDragStartWidth.current + delta));
+        setRtlPanelWidth?.(nextWidth);
+      }
     }
 
     function onMouseUp() {
-      if (isDragging.current || isHorizontalDragging.current) {
+      if (isDragging.current || isHorizontalDragging.current || isRtlDragging.current) {
         isDragging.current = false;
         isHorizontalDragging.current = false;
+        isRtlDragging.current = false;
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
       }
@@ -44,7 +58,7 @@ export function usePanelResizers({
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [setStatePanelWidth, setTerminalHeight]);
+  }, [setRtlPanelWidth, setStatePanelWidth, setTerminalHeight]);
 
   function handleResizeStart(event) {
     isDragging.current = true;
@@ -64,8 +78,18 @@ export function usePanelResizers({
     event.preventDefault();
   }
 
+  function handleRtlResizeStart(event) {
+    isRtlDragging.current = true;
+    rtlDragStartX.current = event.clientX;
+    rtlDragStartWidth.current = rtlPanelWidth ?? 200;
+    document.body.style.cursor = "ew-resize";
+    document.body.style.userSelect = "none";
+    event.preventDefault();
+  }
+
   return {
     handleResizeStart,
     handleHorizontalResizeStart,
+    handleRtlResizeStart,
   };
 }

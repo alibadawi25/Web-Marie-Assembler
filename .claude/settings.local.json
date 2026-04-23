@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:marie.js.org)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__read_page",
+      "mcp__Claude_in_Chrome__get_page_text",
+      "mcp__Claude_in_Chrome__find",
+      "Bash(npm run:*)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__playwright__browser_navigate",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:marie-js.github.io)",
+      "WebFetch(domain:medium.com)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

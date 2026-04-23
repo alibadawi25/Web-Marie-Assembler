@@ -6,7 +6,7 @@
     <meta name="description" content="MARIE Assembly Language Editor and Simulator - A web-based educational tool for learning computer architecture and assembly programming" />
     <meta name="keywords" content="MARIE, assembly, programming, computer architecture, education, simulator, assembler" />
     <meta name="author" content="Marie Assembler Team" />
-    <meta name="theme-color" content="#1890ff" />
+    <meta name="theme-color" content="#090d16" />
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -15,6 +15,7 @@
     <!-- Preconnect to external domains for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     
     <!-- Open Graph meta tags for social sharing -->
     <meta property="og:title" content="MARIE Assembler" />
@@ -29,50 +30,115 @@
     
     <title>MARIE Assembler</title>
     
-    <!-- Loading styles to prevent FOUC -->
+    <!-- Loading screen -->
     <style>
-      
-      /* Loading spinner */
       .loading-container {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #242424;
-        z-index: 9999;
-      }
-      
-      .loading-content {
+        inset: 0;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: center;
-        text-align: center;
+        background: #090d16;
+        z-index: 9999;
+        transition: opacity 0.4s ease;
       }
-      
-      .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top: 4px solid #1890ff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
+
+      .loading-container.loading--done {
+        opacity: 0;
+        pointer-events: none;
       }
-      
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+
+      /* Logo icon — mirrors the app-brand-icon */
+      .loading-logo {
+        width: 58px;
+        height: 58px;
+        border-radius: 14px;
+        background: #0d1e38;
+        border: 1px solid #1a3356;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #4e9bf0;
+        letter-spacing: -0.04em;
+        font-family: 'IBM Plex Sans', system-ui, sans-serif;
+        margin-bottom: 20px;
+        animation: logo-breathe 2.8s ease-in-out infinite;
+      }
+
+      @keyframes logo-breathe {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(78, 155, 240, 0.0),
+                      0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(78, 155, 240, 0.07),
+                      0 0 40px 2px rgba(78, 155, 240, 0.14),
+                      0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+      }
+
+      /* Brand name */
+      .loading-brand {
+        font-family: 'IBM Plex Sans', system-ui, sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #b0bfcc;
+        letter-spacing: 0.06em;
+        margin-bottom: 28px;
+        opacity: 0;
+        animation: fade-rise 0.5s ease 0.25s forwards;
+      }
+
+      .loading-brand-highlight {
+        color: #4e9bf0;
+      }
+
+      @keyframes fade-rise {
+        from { opacity: 0; transform: translateY(5px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Sweeping bar */
+      .loading-bar-track {
+        width: 100px;
+        height: 2px;
+        background: #111c2e;
+        border-radius: 2px;
+        overflow: hidden;
+        opacity: 0;
+        animation: fade-rise 0.5s ease 0.45s forwards;
+      }
+
+      .loading-bar-fill {
+        height: 100%;
+        width: 50%;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          #2a5a9a 30%,
+          #4e9bf0 50%,
+          #2a5a9a 70%,
+          transparent 100%);
+        animation: bar-sweep 1.5s ease-in-out 0.5s infinite;
+      }
+
+      @keyframes bar-sweep {
+        0%   { transform: translateX(-200%); }
+        100% { transform: translateX(300%); }
       }
     </style>
   </head>
   <body>
-    <!-- Loading indicator -->
+    <!-- Loading screen -->
     <div id="loading" class="loading-container">
-      <div class="loading-content">
-        <div class="loading-spinner"></div>
+      <div class="loading-logo">M</div>
+      <div class="loading-brand">
+        <span class="loading-brand-highlight">MARIE</span> Assembler
+      </div>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill"></div>
       </div>
     </div>
     
@@ -87,9 +153,8 @@
       window.addEventListener('load', function() {
         const loading = document.getElementById('loading');
         if (loading) {
-          loading.style.display = 'none';
-          // Restore normal scrolling
-          document.body.style.overflow = 'auto';
+          loading.classList.add('loading--done');
+          setTimeout(function() { loading.style.display = 'none'; }, 420);
         }
       });
     </script>

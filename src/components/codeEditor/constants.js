@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   fileName: "web-marie-assembler.fileName",
   projectName: "web-marie-assembler.projectName",
   recentProjects: "web-marie-assembler.recentProjects",
+  watchList: "web-marie-assembler.watchList",
 };
 
 export const INSTRUCTIONS_WITH_ARGS = [
@@ -19,6 +20,8 @@ export const INSTRUCTIONS_WITH_ARGS = [
   "loadi",
   "storei",
   "jns",
+  "loadimmi",
+  "adr",
 ];
 
 export const LABEL_REF_INSTRUCTIONS = new Set([
@@ -32,6 +35,7 @@ export const LABEL_REF_INSTRUCTIONS = new Set([
   "loadi",
   "storei",
   "jns",
+  "adr",
 ]);
 
 export const ALL_INSTRUCTIONS_WITH_INLINE_ARGS = new Set([
@@ -93,4 +97,5 @@ export const EDITOR_OPTIONS = {
   lineNumbersMinChars: 3,
   padding: { top: 12 },
   scrollBeyondLastLine: false,
+  glyphMargin: true,
 };

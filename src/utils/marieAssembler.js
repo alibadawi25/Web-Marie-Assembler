@@ -20,6 +20,8 @@ const instructionsWithArgs = new Set([
   "jns",
   "dec",
   "hex",
+  "loadimmi",
+  "adr",
 ]);
 
 function parseLine(rawLine, lineNumber) {
@@ -53,6 +55,21 @@ function parseLine(rawLine, lineNumber) {
   const instruction = tokens[0].toLowerCase();
   const operand = tokens[1] ?? null;
   return { lineNumber, label, instruction, operand };
+}
+
+function parseImmediate12(operand, lineNumber) {
+  let value;
+  if (/^\d+$/.test(operand)) {
+    value = parseInt(operand, 10);
+  } else if (/^[0-9a-fA-F]+$/.test(operand)) {
+    value = parseInt(operand, 16);
+  } else {
+    throw new AssemblerError(`Syntax error: LOADIMMI requires a numeric literal (e.g. loadimmi 5 or loadimmi FF)`, lineNumber);
+  }
+  if (value < 0 || value > 0xfff) {
+    throw new AssemblerError(`Syntax error: LOADIMMI value must be 0–4095 (0x000–0xFFF)`, lineNumber);
+  }
+  return value;
 }
 
 function parseDecOperand(operand, lineNumber) {
@@ -155,6 +172,16 @@ export function assembleCode(sourceCode) {
       } else if (instruction === "hex") {
         opcode = 0;
         args = parseHexOperand(operand, lineNumber);
+      } else if (instruction === "loadimmi") {
+        opcode = getOpcode("loadimmi");
+        args = parseImmediate12(operand, lineNumber);
+      } else if (instruction === "adr") {
+        opcode = 0;
+        const symbol = symbolTable[operand];
+        if (symbol === undefined) {
+          throw new AssemblerError(`Undefined symbol: '${operand}'`, lineNumber);
+        }
+        args = symbol;
       } else if (instruction === "skipcond") {
         opcode = getOpcode(instruction);
         if (!/^(000|400|800)$/i.test(operand)) {
@@ -218,6 +245,7 @@ function getOpcode(instruction) {
     skipcond: 32768,
     jump: 36864,
     clear: 40960,
+    loadimmi: 40960,
     addi: 45056,
     jumpi: 49152,
     loadi: 53248,

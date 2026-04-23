@@ -1,11 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Fonts */
+  --font-ui:   'IBM Plex Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+
+  /* Background layers — deep navy hierarchy */
+  --bg-app:      #141414;
+  --bg-base:     #242424;
+  --bg-surface:  #1a1a1a;
+  --bg-elevated: #1a1a1a;
+  --bg-overlay:  #1e1e1e;
+
+  /* Borders */
+  --border-faint:   #1a1a1a;
+  --border-subtle:  #222;
+  --border-default: #2a2a2a;
+  --border-strong:  #333;
+
+  /* Text */
+  --text-primary:   rgba(255, 255, 255, 0.87);
+  --text-secondary: #999;
+  --text-tertiary:  #666;
+  --text-muted:     #4a4a4a;
+
+  /* Amber — brand, interactive */
+  --amber:        #f0a030;
+  --amber-dim:    #a87020;
+  --amber-bg:     #160e04;
+  --amber-border: #342006;
+
+  /* Green — data values, run */
+  --green:        #4ecf7c;
+  --green-dim:    #3a8a5a;
+  --green-bg:     #0d2118;
+  --green-border: #1d4a31;
+
+  /* Blue — assembly, info */
+  --blue:        #4e9bf0;
+  --blue-dim:    #3c6fad;
+  --blue-bg:     #0e1f38;
+  --blue-border: #2a5a9a;
+
+  /* Red — errors, stop */
+  --red:        #f07070;
+  --red-dim:    #a84a4a;
+  --red-bg:     #3d1515;
+  --red-border: #5a2222;
+
+  /* Gold — watch, warnings */
+  --gold:        #cfc04e;
+  --gold-bg:     #1a1a00;
+  --gold-border: #3a3a00;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+
+:root {
+  font-family: var(--font-ui);
   line-height: 1.5;
   font-weight: 400;
-
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color: var(--text-primary);
+  background-color: var(--bg-app);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,24 +72,19 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--blue);
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
-}
+a:hover { color: var(--blue-dim); }
 
 body {
   margin: 0;
-
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-app);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+h1 { font-size: 3.2em; line-height: 1.1; }
 
 button {
   border-radius: 8px;
@@ -40,14 +93,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--bg-elevated);
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
+button:hover { border-color: var(--blue); }
 button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+button:focus-visible { outline: 4px auto -webkit-focus-ring-color; }

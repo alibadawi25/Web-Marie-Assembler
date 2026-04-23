@@ -246,6 +246,74 @@ export function getInputValue(inputType, inputValue) {
   return Number.parseInt(inputValue, 10);
 }
 
+// ─── Share URL ───────────────────────────────────────────────────────────────
+
+export function encodeShareUrl(code) {
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(code)));
+    const url = new URL(window.location.href);
+    url.searchParams.set('share', encoded);
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return window.location.href;
+  }
+}
+
+export function decodeShareParam() {
+  try {
+    const param = new URLSearchParams(window.location.search).get('share');
+    if (!param) return null;
+    return decodeURIComponent(escape(atob(param)));
+  } catch {
+    return null;
+  }
+}
+
+// ─── Export helpers ───────────────────────────────────────────────────────────
+
+export function exportAsHexDump(machineCode, startAddress) {
+  const WORDS_PER_LINE = 8;
+  const lines = [];
+  for (let i = 0; i < machineCode.length; i += WORDS_PER_LINE) {
+    const addr = (startAddress + i).toString(16).toUpperCase().padStart(4, '0');
+    const words = machineCode
+      .slice(i, i + WORDS_PER_LINE)
+      .map((w) => w.toString(16).toUpperCase().padStart(4, '0'))
+      .join(' ');
+    lines.push(`:${addr}  ${words}`);
+  }
+  return lines.join('\n');
+}
+
+export function exportAsBinary(machineCode) {
+  const buffer = new Uint8Array(machineCode.length * 2);
+  machineCode.forEach((word, i) => {
+    buffer[i * 2] = (word >> 8) & 0xff;
+    buffer[i * 2 + 1] = word & 0xff;
+  });
+  return buffer;
+}
+
+export function exportAsLogisim(machineCode) {
+  const words = machineCode.map((w) => w.toString(16).toUpperCase().padStart(4, '0'));
+  return `v2.0 raw\n${words.join(' ')}`;
+}
+
+export function downloadFile(content, filename, mimeType) {
+  const blob = content instanceof Uint8Array
+    ? new Blob([content], { type: mimeType })
+    : new Blob([content], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function isInputValueInvalid(inputType, inputValue) {
   if (inputType === "unicode") {
     return inputValue.length !== 1;
